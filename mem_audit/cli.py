@@ -22,7 +22,7 @@ def main():
               help="For each memory, how many nearest neighbors to send to the "
                    "LLM judge. Default candidate-selection strategy — see "
                    "--similarity-threshold for the old fixed-cutoff alternative.")
-@click.option("--min-similarity", type=float, default=0.3, show_default=True,
+@click.option("--min-similarity", type=float, default=0.05, show_default=True,
               help="Loose floor for --top-k candidates — skips obviously-unrelated "
                    "pairs before spending an LLM call, not a duplicate/contradiction "
                    "decision boundary.")
@@ -72,6 +72,17 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
     else:
         llm_call = default_llm_judge(model=llm_model) if llm_model else default_llm_judge()
 
+    def on_stage(message: str) -> None:
+        # Plain lines via click.echo, not \r-based — \r-overwrite progress
+        # is unreliable across terminals (confirmed: invisible in at least
+        # one real PowerShell session despite working correctly in
+        # isolated testing). A guaranteed-visible line beats a fancier one
+        # that might not render.
+        click.echo(message, err=True)
+
+    def on_progress(done: int, total_pairs: int) -> None:
+        click.echo(f"  judged {done}/{total_pairs}", err=True)
+
     try:
         findings, total = run_audit(
             mem0_client=client,
@@ -82,6 +93,8 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
             min_similarity=min_similarity,
             similarity_threshold=similarity_threshold,
             page_size=page_size,
+            on_progress=on_progress,
+            on_stage=on_stage,
         )
     except RuntimeError as e:
         raise click.ClickException(str(e))

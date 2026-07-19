@@ -10,3 +10,7 @@ smoke_test_qdrant_db/
 mem0_config.json
 realistic_test_qdrant_db/
 report.json
+
+confidence_config.json
+confidence_report*.json
+confidence_test_qdrant_db/

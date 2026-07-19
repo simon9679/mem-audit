@@ -86,13 +86,38 @@ calls. Good for seeing the tool's behavior before wiring up real credentials.
 ## How it works
 
 1. `Mem0Connector.fetch_all(user_id)` — reads every memory via the Mem0 SDK.
-2. `find_duplicate_candidates` — cheap cosine-similarity pass narrows N
-   memories down to a small set of close pairs.
+2. `find_duplicate_candidates` — cheap embedding pass finds each memory's
+   top-k nearest neighbors (default k=5), not a fixed cosine cutoff.
+   OpenAI-family embeddings aren't reliably calibrated for absolute
+   similarity thresholds (confirmed against real text-embedding-3-small
+   output, not just theory — see `mem_audit/embeddings.py` for specifics),
+   so top-k sidesteps guessing a "correct" number. Pass
+   `--similarity-threshold` to opt into the old fixed-cutoff behavior
+   instead.
 3. `find_contradictions` — an LLM judge classifies each candidate pair as
    `DUPLICATE` / `CONTRADICTION` / `UPDATE` / `UNRELATED`. Only the first
    pass's output feeds this step, so cost stays roughly linear in the number
-   of *near* pairs, not O(n²) LLM calls.
+   of *near* pairs, not O(n²) LLM calls. Judging is sequential (one call
+   per pair) — a progress line prints to stderr so a run with dozens of
+   candidates doesn't look hung.
 4. `report.py` — prints a severity-sorted table. `--json-out` for CI use.
+
+## Measured accuracy
+
+Ran against a 24-fact synthetic memory store with known ground truth (7
+deliberately-planted duplicate/contradiction/update pairs, paraphrased —
+not template swaps — plus a topically-related-but-not-duplicate "trap"
+pair and 8 unrelated facts as noise), through the real CLI with real
+providers (GitHub Models embeddings + Cerebras judge, not mocks):
+
+- **7/7 planted pairs caught** (3 duplicates, 2 contradictions, 2 updates)
+- **0 false positives** — the trap pair and all 8 noise facts correctly
+  produced no findings
+
+This is one test on English, short-sentence, personal-memory-style facts —
+not a claim it generalizes to every language, store size, or fact
+structure. Take it as "the approach works as designed," not "guaranteed
+accuracy on your data."
 
 ## Status
 

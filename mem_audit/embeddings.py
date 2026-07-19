@@ -83,7 +83,7 @@ def cosine_similarity_matrix(vectors: np.ndarray) -> np.ndarray:
     return norm @ norm.T
 
 
-def top_k_neighbor_pairs(vectors: np.ndarray, k: int = 5, min_similarity: float = 0.3, chunk_size: int = 512):
+def top_k_neighbor_pairs(vectors: np.ndarray, k: int = 5, min_similarity: float = 0.05, chunk_size: int = 512):
     """
     Yields (i, j, score) for every pair where j is among i's top-k nearest
     neighbors (or vice versa), without ever materializing the full N×N
@@ -101,9 +101,19 @@ def top_k_neighbor_pairs(vectors: np.ndarray, k: int = 5, min_similarity: float 
     (comparatively cheap) LLM judge is what actually decides duplicate vs.
     contradiction vs. unrelated — not the embedding pass.
 
-    min_similarity is a loose floor only (default 0.3), meant to skip
-    obviously-unrelated pairs before spending an LLM call on them, not to
-    make the duplicate/contradiction decision itself.
+    min_similarity is a loose floor only (default 0.05), meant to skip
+    only the near-zero/negative end. Confirmed via a ground-truth test
+    that a 0.3 floor silently drops real pairs (0.27-0.29 cosine) —
+    "related" and "unrelated" cosine ranges overlap around 0.22-0.29 for
+    OpenAI-family embeddings, so any floor in that band risks false
+    negatives. top-k is what actually bounds cost here, not this floor.
+
+    Known limitation: chunking bounds peak memory, not time — this is
+    still O(n^2) compute (every record's embedding is compared against
+    every other's). Fine for hundreds-to-low-thousands of memories (a
+    realistic personal memory store); would need a real ANN index (FAISS,
+    HNSW, or the vector store's own similarity search) for tens of
+    thousands of records. Not implemented — no one has hit this yet.
     """
     n = vectors.shape[0]
     if n < 2:

@@ -5,12 +5,20 @@ from dataclasses import dataclass
 from mem_audit.connectors.mem0_connector import MemoryRecord
 from mem_audit.embeddings import EmbedFn, iter_similar_pairs, top_k_neighbor_pairs
 
-# Loose floor only — not a duplicate/contradiction decision boundary. See
-# top_k_neighbor_pairs() in embeddings.py for why a fixed cosine threshold
-# alone is the wrong tool here: OpenAI-family embeddings aren't reliably
-# calibrated for absolute cutoffs. This value only skips pairs cheap enough
-# to obviously not be worth an LLM call.
-DEFAULT_MIN_SIMILARITY = 0.3
+# Verified real bug (not a guess): a confidence test with known ground
+# truth found 3 real contradiction/update pairs scoring 0.27-0.29 cosine
+# similarity — genuinely related facts phrased in very different
+# vocabulary ("I don't have any pets" / "my dog needs to go to the vet").
+# All 3 were correctly in top-k, and the judge correctly classified them
+# when called directly — but a 0.3 floor silently dropped them before
+# they ever reached the judge. Worse: unrelated pairs have scored as high
+# as 0.22-0.26 in other tests, meaning "related" and "unrelated" ranges
+# overlap around here — no floor value is safe. top-k already bounds LLM
+# cost by pair count; a similarity floor on top of that doesn't add
+# safety, it just risks re-introducing the same "guess a magic number"
+# problem top-k was meant to avoid. Left non-zero only to skip the
+# genuinely negative/near-zero end (numerically opposite embeddings).
+DEFAULT_MIN_SIMILARITY = 0.05
 DEFAULT_TOP_K = 5
 
 # Kept for people who explicitly want the old fixed-threshold behavior via

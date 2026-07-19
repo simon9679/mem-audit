@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Callable
+
 from mem_audit.connectors.mem0_connector import Mem0Connector
 from mem_audit.detectors.base import Finding
 from mem_audit.detectors.contradictions import LLMCallFn, find_contradictions
@@ -16,6 +18,8 @@ def run_audit(
     min_similarity: float = DEFAULT_MIN_SIMILARITY,
     similarity_threshold: float | None = None,
     page_size: int = 500,
+    on_progress: Callable[[int, int], None] | None = None,
+    on_stage: Callable[[str], None] | None = None,
 ) -> tuple[list[Finding], int]:
     """
     Full pipeline: fetch -> cheap embedding-similarity pass -> LLM judge on
@@ -45,6 +49,9 @@ def run_audit(
     if len(records) < 2:
         return [], len(records)
 
+    if on_stage:
+        on_stage(f"Computing embeddings for {len(records)} memories...")
+
     candidate_pairs = find_duplicate_candidates(
         records,
         embed_fn,
@@ -52,5 +59,9 @@ def run_audit(
         min_similarity=min_similarity,
         threshold=similarity_threshold,
     )
-    findings = find_contradictions(candidate_pairs, llm_call)
+
+    if on_stage:
+        on_stage(f"Found {len(candidate_pairs)} candidate pair(s) — judging...")
+
+    findings = find_contradictions(candidate_pairs, llm_call, on_progress=on_progress)
     return findings, len(records)
