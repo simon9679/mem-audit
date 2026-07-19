@@ -1,0 +1,21 @@
+[project]
+name = "mem-audit"
+version = "0.1.0"
+description = "External consistency auditor for Mem0-based memory stores. Finds duplicates, contradictions and staleness without migrating your data."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+    "mem0ai>=0.1.0",
+    "numpy>=1.24",
+    "openai>=1.0",       # used as the LLM-judge client; swap for any OpenAI-compatible endpoint
+    "rich>=13.0",         # CLI report formatting
+    "click>=8.1",
+]
+
+[project.scripts]
+mem-audit = "mem_audit.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

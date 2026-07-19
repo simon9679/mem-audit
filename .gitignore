@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+report.json
+.env
+
+smoke_test_qdrant_db/
