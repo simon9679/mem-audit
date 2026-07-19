@@ -131,3 +131,58 @@ if __name__ == "__main__":
     test_no_crash_on_single_memory()
     test_raises_when_oss_client_hits_page_size_ceiling()
     print("All tests passed.")
+
+
+def test_naive_aware_datetime_mix_does_not_crash():
+    """
+    Regression test for a real bug found via external review + reproduced
+    manually: if one record's created_at is a naive datetime and another's
+    is timezone-aware, comparing them with `>` used to raise TypeError and
+    crash the whole judge_pair call. Fixed by normalizing naive datetimes
+    to UTC in Mem0Connector._parse_dt.
+    """
+    from datetime import datetime, timezone
+    from mem_audit.connectors.mem0_connector import _parse_dt
+
+    aware = _parse_dt("2026-07-01T12:00:00Z")
+    naive_input = datetime(2026, 7, 2, 12, 0, 0)
+    normalized = _parse_dt(naive_input)
+
+    assert aware.tzinfo is not None
+    assert normalized.tzinfo is not None
+    # must not raise TypeError
+    assert aware < normalized
+
+
+def test_mismatched_embedding_count_raises_clear_error():
+    """
+    Regression test: an embed_fn that returns fewer vectors than input
+    texts (simulating a provider partial failure) must raise a clear
+    ValueError, not silently misalign records[i] with the wrong vector.
+    """
+    import numpy as np
+    from mem_audit.connectors.mem0_connector import MemoryRecord
+    from mem_audit.detectors.duplicates import find_duplicate_candidates
+
+    records = [
+        MemoryRecord(id="a", text="fact one"),
+        MemoryRecord(id="b", text="fact two"),
+        MemoryRecord(id="c", text="fact three"),
+    ]
+
+    def broken_embed_fn(texts):
+        # returns one fewer vector than requested
+        return np.random.randn(len(texts) - 1, 8).astype(np.float32)
+
+    raised = False
+    try:
+        find_duplicate_candidates(records, broken_embed_fn)
+    except ValueError:
+        raised = True
+    assert raised, "expected ValueError on embedding count mismatch"
+
+
+if __name__ == "__main__":
+    test_naive_aware_datetime_mix_does_not_crash()
+    test_mismatched_embedding_count_raises_clear_error()
+    print("Additional regression tests passed.")

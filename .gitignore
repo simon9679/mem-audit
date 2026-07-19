@@ -6,3 +6,7 @@ report.json
 .env
 
 smoke_test_qdrant_db/
+
+mem0_config.json
+realistic_test_qdrant_db/
+report.json

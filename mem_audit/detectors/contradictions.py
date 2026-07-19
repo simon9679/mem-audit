@@ -60,7 +60,15 @@ def default_llm_judge(client=None, model: str = "gpt-4o-mini") -> LLMCallFn:
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
         )
-        return resp.choices[0].message.content or ""
+        # Defensive: a malformed/unexpected provider response (e.g. empty
+        # choices) would otherwise raise IndexError/AttributeError and
+        # crash the whole audit over one judge call. _safe_parse already
+        # treats unparseable text as UNRELATED — extend that same
+        # tolerance to a malformed response shape.
+        try:
+            return resp.choices[0].message.content or ""
+        except (IndexError, AttributeError):
+            return ""
 
     return call
 
@@ -100,7 +108,15 @@ def cerebras_llm_judge(model: str = "gpt-oss-120b", api_key: str | None = None) 
             messages=[{"role": "user", "content": prompt}],
             temperature=0.0,
         )
-        return resp.choices[0].message.content or ""
+        # Defensive: a malformed/unexpected provider response (e.g. empty
+        # choices) would otherwise raise IndexError/AttributeError and
+        # crash the whole audit over one judge call. _safe_parse already
+        # treats unparseable text as UNRELATED — extend that same
+        # tolerance to a malformed response shape.
+        try:
+            return resp.choices[0].message.content or ""
+        except (IndexError, AttributeError):
+            return ""
 
     return call
 
@@ -108,9 +124,35 @@ def cerebras_llm_judge(model: str = "gpt-oss-120b", api_key: str | None = None) 
 def judge_pair(record_a: MemoryRecord, record_b: MemoryRecord, llm_call: LLMCallFn) -> JudgeResult:
     # Order by created_at when available so "older"/"newer" in the prompt is
     # meaningful; contradiction vs. update hinges on temporal order.
+    #
+    # Defensive try/except: Mem0Connector._parse_dt normalizes naive
+    # datetimes to UTC at the source, but MemoryRecord can in principle be
+    # constructed directly (tests, other connectors) with a mix of naive
+    # and timezone-aware datetimes, which makes `>` raise TypeError. If
+    # that happens, fall back to the pair's original order rather than
+    # crashing the whole audit over one unorderable pair.
     a, b = record_a, record_b
-    if a.created_at and b.created_at and a.created_at > b.created_at:
-        a, b = b, a
+    if a.created_at and b.created_at:
+        try:
+            if a.created_at > b.created_at:
+                a, b = b, a
+        except TypeError:
+            pass
+    elif a.id and b.id:
+        # No usable created_at on one or both records — order is otherwise
+        # whatever the connector happened to return, which is not stable
+        # across runs/pagination. Fall back to a deterministic tiebreaker
+        # (id string) so "older"/"newer" in the prompt is at least
+        # consistent run-to-run, even if not temporally meaningful.
+        #
+        # This also covers same-timestamp collisions: memories added in
+        # rapid succession (e.g. batch-seeding, migration) can land on the
+        # same created_at value depending on the backend's timestamp
+        # resolution, which makes `>` return False either way and leaves
+        # the pair in whatever order the connector returned — not
+        # necessarily insertion order.
+        if a.id > b.id:
+            a, b = b, a
 
     prompt = _JUDGE_PROMPT.format(text_a=a.text, text_b=b.text)
     raw = llm_call(prompt)
@@ -121,6 +163,7 @@ def judge_pair(record_a: MemoryRecord, record_b: MemoryRecord, llm_call: LLMCall
 def find_contradictions(
     candidate_pairs: list["CandidatePair"],
     llm_call: LLMCallFn,
+    on_progress: Callable[[int, int], None] | None = None,
 ) -> list[Finding]:
     """
     Takes candidate pairs from duplicates.find_duplicate_candidates and
@@ -133,11 +176,20 @@ def find_contradictions(
     meant a pair the judge explicitly called UNRELATED could still show up
     in the report as a duplicate. Fixed by making the judge the only
     source of Findings for candidate pairs.)
+
+    Judging is sequential (one HTTP call per candidate pair) — with
+    top-k=5 on even a modest memory store, this can be dozens of calls,
+    and with no feedback it looks hung rather than working. on_progress,
+    if given, is called as on_progress(done, total) after each pair.
+    cli.py wires this to a stderr progress line by default.
     """
     findings: list[Finding] = []
-    for pair in candidate_pairs:
+    total = len(candidate_pairs)
+    for done, pair in enumerate(candidate_pairs, start=1):
         a, b = pair.record_a, pair.record_b
         result = judge_pair(a, b, llm_call)
+        if on_progress:
+            on_progress(done, total)
 
         if result.label == "DUPLICATE":
             findings.append(

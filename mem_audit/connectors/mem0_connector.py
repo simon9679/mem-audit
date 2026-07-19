@@ -14,7 +14,7 @@ module — never silently by the connector.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 
@@ -149,11 +149,27 @@ class Mem0Connector:
 
 
 def _parse_dt(value: Any) -> Optional[datetime]:
+    """
+    Normalizes to a timezone-aware datetime, or None.
+
+    Verified real bug: if one record's created_at arrives as a naive
+    datetime object (some backends return these directly) and another's
+    as an ISO string with a timezone (e.g. "...Z"), comparing them with
+    `>` in contradictions.judge_pair raises TypeError: can't compare
+    offset-naive and offset-aware datetimes — crashing the whole audit.
+    Fixed by always attaching UTC to naive values here, at the source,
+    rather than trying to guard every comparison site downstream.
+    """
     if not value:
         return None
     if isinstance(value, datetime):
+        if value.tzinfo is None:
+            return value.replace(tzinfo=timezone.utc)
         return value
     try:
-        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed
     except ValueError:
         return None

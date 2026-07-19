@@ -47,6 +47,19 @@ def find_duplicate_candidates(
     texts = [r.text for r in records]
     vectors = embed_fn(texts)
 
+    # Verified real risk: if embed_fn returns fewer/more vectors than
+    # input texts (provider partial failure, silent truncation, batch
+    # limit) the index-based zip of records[i]/records[j] to vectors[i]/
+    # vectors[j] downstream silently misaligns — not a crash, wrong
+    # candidate pairs with no indication anything went wrong. Fail loudly
+    # instead of guessing.
+    if vectors.shape[0] != len(texts):
+        raise ValueError(
+            f"embed_fn returned {vectors.shape[0]} vectors for {len(texts)} "
+            f"input texts — provider likely truncated or partially failed "
+            f"the batch. Refusing to continue with misaligned vectors."
+        )
+
     pairs: list[CandidatePair] = []
     if threshold is not None:
         pair_iter = iter_similar_pairs(vectors, threshold=threshold)
