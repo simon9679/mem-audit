@@ -3,11 +3,19 @@
 External consistency auditor for [Mem0](https://github.com/mem0ai/mem0)-based memory stores.
 
 Mem0's current extraction pipeline is single-pass ADD-only: facts accumulate,
-nothing is overwritten. That's a deliberate design choice, but it means
-contradictory and duplicate facts pile up silently unless something else
-catches them. See [mem0ai/mem0#4896](https://github.com/mem0ai/mem0/issues/4896)
-and [#4536](https://github.com/mem0ai/mem0/issues/4536) for two concrete,
-open examples.
+nothing is overwritten. This is an explicit, official design decision, not a
+bug — see [mem0ai/mem0#4896](https://github.com/mem0ai/mem0/issues/4896)
+(closed as "not planned"), where a Mem0 maintainer confirms: *"our v3 SDK
+handles contradictions by design through the extraction prompt and memory
+linking, not through an explicit UPDATE/conflict resolution code path...
+Both memories being stored is intentional — the historical record has
+value, and the retrieval layer is designed to prioritize the most relevant
+(typically newest) memory."*
+
+That's a reasonable design tradeoff. It also means contradictory and
+duplicate facts are guaranteed to coexist in your store indefinitely, with
+no built-in way to review them — `mem-audit` is that review step, external
+to Mem0 by design, not a workaround for something they're about to fix.
 
 `mem-audit` doesn't replace your memory store or migrate your data anywhere.
 It connects to your existing Mem0 instance through the standard SDK
@@ -118,6 +126,33 @@ This is one test on English, short-sentence, personal-memory-style facts —
 not a claim it generalizes to every language, store size, or fact
 structure. Take it as "the approach works as designed," not "guaranteed
 accuracy on your data."
+
+## Related work
+
+`mem-audit` is not the only project in this space. In rough order of how
+close they are to what this does:
+
+- [mem0ai/mem0#5850](https://github.com/mem0ai/mem0/issues/5850) — an
+  open, in-progress proposal for built-in compaction inside Mem0 itself
+  (merge-first, evict-fallback). If/when this lands, it may cover part of
+  what `mem-audit` catches — natively, write-time, and with automatic
+  merging rather than a human-reviewed report.
+- [mem0ai/mem0-lifecycle](https://github.com/HH1162/mem0-lifecycle) —
+  a third-party plugin that decays unused memories over time
+  (Ebbinghaus-curve based), a different axis (staleness-by-neglect) than
+  duplicate/contradiction detection.
+- A write-time "DedupMemory" wrapper shared in
+  [mem0ai/mem0#5352](https://github.com/mem0ai/mem0/issues/5352#issuecomment)
+  by a community member — intercepts at `add()` time rather than
+  auditing after the fact.
+- [TeleMem](https://github.com/TeleAI-UAGI/telemem) — a full drop-in
+  replacement for Mem0 with built-in semantic deduplication, rather than
+  an external tool you point at an existing store.
+
+The distinction `mem-audit` is trying to hold onto: **read-only, external,
+human-in-the-loop**. Everything above either modifies your store
+automatically or requires migrating to it. If that distinction stops
+mattering to you, any of the above may be a better fit than this.
 
 ## Status
 
