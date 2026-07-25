@@ -29,4 +29,8 @@ jobs:
         run: PYTHONPATH=. python examples/demo_offline.py
 
       - name: Run tests
-        run: PYTHONPATH=. python tests/test_pipeline.py
+        run: |
+          PYTHONPATH=. python tests/test_pipeline.py
+          PYTHONPATH=. python tests/test_embeddings.py
+          PYTHONPATH=. python tests/test_resilience.py
+          PYTHONPATH=. python tests/test_judge_prompt.py

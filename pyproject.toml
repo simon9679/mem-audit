@@ -13,6 +13,11 @@ dependencies = [
     "click>=8.1",
 ]
 
+[project.optional-dependencies]
+# Exact token counting for embedding batch sizing. Optional on purpose — the
+# offline path and CI fall back to a len/4 heuristic and must not require it.
+precise = ["tiktoken>=0.5"]
+
 [project.scripts]
 mem-audit = "mem_audit.cli:main"
 

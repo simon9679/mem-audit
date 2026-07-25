@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict
 
 from rich.console import Console
 from rich.table import Table
 
-from mem_audit.detectors.base import Finding, Severity
+from mem_audit.detectors.base import Finding, Severity, finding_to_dict
 
 _SEVERITY_STYLE = {
     Severity.HIGH: "bold red",
@@ -47,9 +46,6 @@ def print_report(findings: list[Finding], total_memories: int, user_id: str) -> 
 
 
 def export_json(findings: list[Finding], path: str) -> None:
-    data = [asdict(f) for f in findings]
-    for item in data:
-        item["type"] = item["type"].value if hasattr(item["type"], "value") else item["type"]
-        item["severity"] = item["severity"].value if hasattr(item["severity"], "value") else item["severity"]
+    data = [finding_to_dict(f) for f in findings]
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(data, fh, ensure_ascii=False, indent=2)

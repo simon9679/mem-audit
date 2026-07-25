@@ -4,7 +4,7 @@ from typing import Callable
 
 from mem_audit.connectors.mem0_connector import Mem0Connector
 from mem_audit.detectors.base import Finding
-from mem_audit.detectors.contradictions import LLMCallFn, find_contradictions
+from mem_audit.detectors.contradictions import CandidatePair, LLMCallFn, find_contradictions
 from mem_audit.detectors.duplicates import DEFAULT_MIN_SIMILARITY, DEFAULT_TOP_K, find_duplicate_candidates
 from mem_audit.embeddings import EmbedFn
 
@@ -20,6 +20,9 @@ def run_audit(
     page_size: int = 500,
     on_progress: Callable[[int, int], None] | None = None,
     on_stage: Callable[[str], None] | None = None,
+    min_request_interval: float = 0.0,
+    partial_out: str | None = None,
+    on_skip: Callable[[CandidatePair], None] | None = None,
 ) -> tuple[list[Finding], int]:
     """
     Full pipeline: fetch -> cheap embedding-similarity pass -> LLM judge on
@@ -63,5 +66,12 @@ def run_audit(
     if on_stage:
         on_stage(f"Found {len(candidate_pairs)} candidate pair(s) — judging...")
 
-    findings = find_contradictions(candidate_pairs, llm_call, on_progress=on_progress)
+    findings = find_contradictions(
+        candidate_pairs,
+        llm_call,
+        on_progress=on_progress,
+        min_request_interval=min_request_interval,
+        partial_out=partial_out,
+        on_skip=on_skip,
+    )
     return findings, len(records)

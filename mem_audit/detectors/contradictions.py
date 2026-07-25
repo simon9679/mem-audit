@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 import json
+import os
+import random
+import sys
+import tempfile
+import time
 from dataclasses import dataclass
-from typing import Callable
+from datetime import datetime
+from typing import Callable, Optional
 
 from mem_audit.connectors.mem0_connector import MemoryRecord
-from mem_audit.detectors.base import Finding, FindingType, Severity
+from mem_audit.detectors.base import Finding, FindingType, Severity, finding_to_dict
 from mem_audit.detectors.duplicates import CandidatePair
 
 # Classifier contract: given two memory texts, return one of these labels.
@@ -17,8 +23,8 @@ _LABELS = {"DUPLICATE", "CONTRADICTION", "UPDATE", "UNRELATED"}
 _JUDGE_PROMPT = """You are auditing an AI agent's long-term memory store for consistency.
 You will see two memory entries about the same user. Classify their relationship.
 
-Memory A (older): "{text_a}"
-Memory B (newer): "{text_b}"
+Memory A ({label_a}): "{text_a}"
+Memory B ({label_b}): "{text_b}"
 
 Respond with strict JSON only, no other text:
 {{
@@ -35,7 +41,11 @@ Label meanings:
   be retired.
 - UNRELATED: the embedding similarity was a false positive; A and B are not
   actually about the same fact.
-"""
+
+The gap between CONTRADICTION and UPDATE often hinges on the time between the two
+memories: a large gap between the dates leans toward UPDATE (the fact changed over
+time), while the same or a very close date leans toward CONTRADICTION (both claimed
+to be true at once). Use the dates shown above when they are present."""
 
 
 @dataclass
@@ -46,9 +56,120 @@ class JudgeResult:
 
 LLMCallFn = Callable[[str], str]  # prompt -> raw text completion
 
+DEFAULT_MAX_RETRIES = 5
 
-def default_llm_judge(client=None, model: str = "gpt-4o-mini") -> LLMCallFn:
-    """OpenAI-compatible default judge. Swap with any callable(prompt) -> str."""
+
+def _retry_after_seconds(exc: BaseException) -> Optional[float]:
+    """
+    Pull a `retry-after` hint (in seconds) out of a rate-limit error if one is
+    present, else None.
+
+    GitHub Models in particular returns a real `retry-after` header on 429
+    (observed values in the tens of thousands of seconds for the daily
+    `UserByModelByDay` quota), so honoring it matters — a fixed sleep can't.
+    We look at both the exception's own attributes and the underlying HTTP
+    response headers, since openai-python surfaces these in different places
+    across versions and compatible clients.
+    """
+    # Some clients attach retry_after / retry-after directly to the exception.
+    for attr in ("retry_after", "retry_after_seconds"):
+        value = getattr(exc, attr, None)
+        if value is not None:
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                pass
+
+    response = getattr(exc, "response", None)
+    headers = getattr(response, "headers", None)
+    if headers:
+        for key in ("retry-after", "Retry-After"):
+            try:
+                value = headers.get(key)
+            except AttributeError:
+                value = None
+            if value:
+                try:
+                    return float(value)
+                except (TypeError, ValueError):
+                    return None
+    return None
+
+
+def _is_rate_limit_error(exc: BaseException) -> bool:
+    """
+    True if `exc` looks like an HTTP 429 / rate-limit error, without hard-
+    depending on openai being importable.
+
+    We check openai.RateLimitError when openai is available, and otherwise
+    (or additionally) fall back to a status_code == 429 duck-type — which
+    also covers custom OpenAI-compatible clients and makes this testable
+    without constructing a real openai error.
+    """
+    try:
+        import openai
+
+        if isinstance(exc, openai.RateLimitError):
+            return True
+    except ImportError:
+        pass
+
+    status = getattr(exc, "status_code", None)
+    if status is None:
+        status = getattr(getattr(exc, "response", None), "status_code", None)
+    return status == 429
+
+
+def retry_on_rate_limit(
+    call: LLMCallFn,
+    max_retries: int = DEFAULT_MAX_RETRIES,
+    sleep: Callable[[float], None] = time.sleep,
+) -> LLMCallFn:
+    """
+    Wraps a judge `call(prompt) -> str` with retry-on-429 and exponential
+    backoff.
+
+    On a rate-limit error we sleep and retry up to `max_retries` times. If the
+    error carries a `retry-after` hint we honor it exactly (plus a little
+    jitter); otherwise we back off exponentially (2, 4, 8, 16, 32s). Any non-
+    rate-limit error propagates immediately. After the retries are exhausted
+    the last rate-limit error is re-raised — find_contradictions turns that
+    into a skipped pair rather than a crashed run.
+
+    Exposed as a standalone helper so a user's own custom `llm_call` can opt
+    into the same behavior (`retry_on_rate_limit(my_call)`) without being
+    forced to.
+    """
+
+    def wrapped(prompt: str) -> str:
+        attempt = 0
+        while True:
+            try:
+                return call(prompt)
+            except Exception as exc:  # noqa: BLE001 — re-raised unless it's a rate limit
+                if not _is_rate_limit_error(exc):
+                    raise
+                attempt += 1
+                if attempt > max_retries:
+                    raise
+                retry_after = _retry_after_seconds(exc)
+                if retry_after is not None:
+                    delay = retry_after + random.uniform(0.0, 1.0)
+                else:
+                    delay = float(2 ** attempt)  # 2, 4, 8, 16, 32, ...
+                sleep(delay)
+
+    return wrapped
+
+
+def default_llm_judge(
+    client=None, model: str = "gpt-4o-mini", max_retries: int = DEFAULT_MAX_RETRIES
+) -> LLMCallFn:
+    """OpenAI-compatible default judge. Swap with any callable(prompt) -> str.
+
+    The returned callable already retries on HTTP 429 with backoff (see
+    retry_on_rate_limit); pass max_retries=0 to disable.
+    """
     if client is None:
         import openai
 
@@ -70,16 +191,20 @@ def default_llm_judge(client=None, model: str = "gpt-4o-mini") -> LLMCallFn:
         except (IndexError, AttributeError):
             return ""
 
-    return call
+    return retry_on_rate_limit(call, max_retries=max_retries)
 
 
-def cerebras_llm_judge(model: str = "gpt-oss-120b", api_key: str | None = None) -> LLMCallFn:
+def cerebras_llm_judge(
+    model: str = "gpt-oss-120b", api_key: str | None = None, max_retries: int = DEFAULT_MAX_RETRIES
+) -> LLMCallFn:
     """
-    Judge backed by Cerebras' free OpenAI-compatible endpoint (1M tokens/day
-    free tier, no card). Good fit for this step specifically: judging is the
-    call made once *per candidate pair*, so it's the volume driver in the
-    pipeline — worth routing to the generous free tier rather than a
-    rate-limited one.
+    Judge backed by Cerebras' free OpenAI-compatible endpoint (no card).
+    Judging is the call made once *per candidate pair*, so it's the volume
+    driver in the pipeline. The real constraint on the free tier is requests-
+    per-minute (reported around 5-30 RPM across 2026), not the daily token
+    budget — so on a large store the throughput limiter is min_request_interval
+    plus 429 backoff (see find_contradictions and retry_on_rate_limit), not the
+    token allowance.
 
     Cerebras' free-tier model catalog has changed more than once in 2026
     (reports as recent as May 2026 show it narrowed to just two models at
@@ -118,7 +243,7 @@ def cerebras_llm_judge(model: str = "gpt-oss-120b", api_key: str | None = None) 
         except (IndexError, AttributeError):
             return ""
 
-    return call
+    return retry_on_rate_limit(call, max_retries=max_retries)
 
 
 def judge_pair(record_a: MemoryRecord, record_b: MemoryRecord, llm_call: LLMCallFn) -> JudgeResult:
@@ -154,20 +279,43 @@ def judge_pair(record_a: MemoryRecord, record_b: MemoryRecord, llm_call: LLMCall
         if a.id > b.id:
             a, b = b, a
 
-    prompt = _JUDGE_PROMPT.format(text_a=a.text, text_b=b.text)
+    prompt = _build_judge_prompt(a, b)
     raw = llm_call(prompt)
     parsed = _safe_parse(raw)
     return JudgeResult(label=parsed.get("label", "UNRELATED"), rationale=parsed.get("rationale", ""))
 
 
-def find_contradictions(
-    candidate_pairs: list["CandidatePair"],
-    llm_call: LLMCallFn,
-    on_progress: Callable[[int, int], None] | None = None,
-) -> list[Finding]:
+def _date_label(base: str, dt: Optional[datetime]) -> str:
     """
-    Takes candidate pairs from duplicates.find_duplicate_candidates and
-    classifies each with an LLM judge.
+    "older" -> "older, 2026-01-01" when a date is available, or just "older"
+    when it isn't. Date only (YYYY-MM-DD), no time, to keep the prompt quiet.
+    We never emit "older, unknown" — absence of a date means the plain label.
+    """
+    if dt is None:
+        return base
+    return f"{base}, {dt.date().isoformat()}"
+
+
+def _build_judge_prompt(a: MemoryRecord, b: MemoryRecord) -> str:
+    """
+    Renders the judge prompt for an already-ordered (older `a`, newer `b`)
+    pair, injecting each memory's date when it has one.
+
+    The temporal gap is what most often separates CONTRADICTION from UPDATE
+    ("Berlin -> Madrid" two years apart is an UPDATE; same day is a
+    CONTRADICTION), and the model can't see it unless we put it in the prompt.
+    """
+    return _JUDGE_PROMPT.format(
+        label_a=_date_label("older", a.created_at),
+        label_b=_date_label("newer", b.created_at),
+        text_a=a.text,
+        text_b=b.text,
+    )
+
+
+def _finding_for(result: JudgeResult, a: MemoryRecord, b: MemoryRecord) -> Optional[Finding]:
+    """
+    Maps a judge label to a Finding, or None for UNRELATED.
 
     Only DUPLICATE, CONTRADICTION and UPDATE labels produce Findings.
     UNRELATED means the cheap embedding pass produced a false positive —
@@ -176,58 +324,142 @@ def find_contradictions(
     meant a pair the judge explicitly called UNRELATED could still show up
     in the report as a duplicate. Fixed by making the judge the only
     source of Findings for candidate pairs.)
+    """
+    if result.label == "DUPLICATE":
+        return Finding(
+            type=FindingType.DUPLICATE,
+            severity=Severity.LOW,
+            memory_ids=[a.id, b.id],
+            summary=f'Duplicate: "{a.text[:60]}" ~ "{b.text[:60]}"',
+            detail=result.rationale,
+            suggested_action="Same fact stored twice — safe to merge.",
+        )
+    if result.label == "CONTRADICTION":
+        return Finding(
+            type=FindingType.CONTRADICTION,
+            severity=Severity.HIGH,
+            memory_ids=[a.id, b.id],
+            summary=f'Contradiction: "{a.text[:60]}" vs "{b.text[:60]}"',
+            detail=result.rationale,
+            suggested_action=(
+                "These cannot both be true. Confirm which is current and "
+                "delete/update the other — Mem0's ADD-only mode will not "
+                "do this for you (see mem0ai/mem0#4896, #4536)."
+            ),
+        )
+    if result.label == "UPDATE":
+        return Finding(
+            type=FindingType.STALE,
+            severity=Severity.MEDIUM,
+            memory_ids=[a.id, b.id],
+            summary=f'Likely superseded: "{a.text[:60]}" -> "{b.text[:60]}"',
+            detail=result.rationale,
+            suggested_action="Consider retiring the older memory to avoid stale retrieval.",
+        )
+    return None
 
-    Judging is sequential (one HTTP call per candidate pair) — with
-    top-k=5 on even a modest memory store, this can be dozens of calls,
-    and with no feedback it looks hung rather than working. on_progress,
-    if given, is called as on_progress(done, total) after each pair.
-    cli.py wires this to a stderr progress line by default.
+
+def _write_findings_atomic(findings: list[Finding], path: str) -> None:
+    """
+    Rewrite `path` with the full current findings list, atomically.
+
+    We write a temp file in the same directory and os.replace() it over the
+    target, so a process killed mid-write never leaves a half-written or empty
+    report — the file is always either the previous complete version or the
+    new complete version. This is the whole point of the incremental flush: a
+    run interrupted at 60% still leaves a valid partial report on disk.
+    """
+    payload = [finding_to_dict(f) for f in findings]
+    directory = os.path.dirname(os.path.abspath(path)) or "."
+    fd, tmp_path = tempfile.mkstemp(dir=directory, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, path)
+    except BaseException:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
+
+
+def find_contradictions(
+    candidate_pairs: list["CandidatePair"],
+    llm_call: LLMCallFn,
+    on_progress: Callable[[int, int], None] | None = None,
+    min_request_interval: float = 0.0,
+    partial_out: str | None = None,
+    on_finding: Callable[[Finding], None] | None = None,
+    on_skip: Callable[["CandidatePair"], None] | None = None,
+    sleep: Callable[[float], None] = time.sleep,
+) -> list[Finding]:
+    """
+    Takes candidate pairs from duplicates.find_duplicate_candidates and
+    classifies each with an LLM judge. Returns the list of Findings.
+
+    Judging is sequential (one HTTP call per candidate pair) — with top-k=5 on
+    even a modest memory store, this can be dozens to hundreds of calls, and
+    with no feedback it looks hung rather than working. on_progress, if given,
+    is called as on_progress(done, total) after each pair. cli.py wires this to
+    a stderr progress line by default.
+
+    Resilience knobs, all opt-in and off by default so existing callers/tests
+    behave exactly as before:
+
+    - min_request_interval: seconds to sleep before every call except the
+      first. A soft throttle for RPM-limited free tiers (e.g. ~12s for a 5-RPM
+      Cerebras free tier). 0.0 means no delay at all.
+    - partial_out: if set, the full findings list is re-written to this path
+      (atomically) after every pair, so an interrupted run still leaves a valid
+      partial report. cli.py points this at --json-out.
+    - on_finding(finding): called for each emitted Finding, for callers that
+      want to stream results themselves.
+    - on_skip(pair): called for each pair abandoned because the judge kept
+      returning HTTP 429 past its retry budget. Such a pair is skipped, not
+      fatal — an audit over 90% of the data beats a traceback at 60%. The judge
+      factories already retry with backoff; if the call *still* raises a rate-
+      limit error here, the retries are exhausted and we move on.
     """
     findings: list[Finding] = []
     total = len(candidate_pairs)
     for done, pair in enumerate(candidate_pairs, start=1):
+        if done > 1 and min_request_interval > 0:
+            sleep(min_request_interval)
+
         a, b = pair.record_a, pair.record_b
-        result = judge_pair(a, b, llm_call)
+        try:
+            result = judge_pair(a, b, llm_call)
+        except Exception as exc:  # noqa: BLE001
+            if not _is_rate_limit_error(exc):
+                raise
+            # Retries (in the judge factory) are exhausted — skip this pair
+            # rather than crashing the whole audit, and keep going.
+            print(
+                f"mem-audit: skipping pair ({a.id}, {b.id}) — judge rate-limited "
+                f"past retry budget: {exc}",
+                file=sys.stderr,
+            )
+            if on_skip:
+                on_skip(pair)
+            if on_progress:
+                on_progress(done, total)
+            if partial_out is not None:
+                _write_findings_atomic(findings, partial_out)
+            continue
+
         if on_progress:
             on_progress(done, total)
 
-        if result.label == "DUPLICATE":
-            findings.append(
-                Finding(
-                    type=FindingType.DUPLICATE,
-                    severity=Severity.LOW,
-                    memory_ids=[a.id, b.id],
-                    summary=f'Duplicate: "{a.text[:60]}" ~ "{b.text[:60]}"',
-                    detail=result.rationale,
-                    suggested_action="Same fact stored twice — safe to merge.",
-                )
-            )
-        elif result.label == "CONTRADICTION":
-            findings.append(
-                Finding(
-                    type=FindingType.CONTRADICTION,
-                    severity=Severity.HIGH,
-                    memory_ids=[a.id, b.id],
-                    summary=f'Contradiction: "{a.text[:60]}" vs "{b.text[:60]}"',
-                    detail=result.rationale,
-                    suggested_action=(
-                        "These cannot both be true. Confirm which is current and "
-                        "delete/update the other — Mem0's ADD-only mode will not "
-                        "do this for you (see mem0ai/mem0#4896, #4536)."
-                    ),
-                )
-            )
-        elif result.label == "UPDATE":
-            findings.append(
-                Finding(
-                    type=FindingType.STALE,
-                    severity=Severity.MEDIUM,
-                    memory_ids=[a.id, b.id],
-                    summary=f'Likely superseded: "{a.text[:60]}" -> "{b.text[:60]}"',
-                    detail=result.rationale,
-                    suggested_action="Consider retiring the older memory to avoid stale retrieval.",
-                )
-            )
+        finding = _finding_for(result, a, b)
+        if finding is not None:
+            findings.append(finding)
+            if on_finding:
+                on_finding(finding)
+
+        if partial_out is not None:
+            _write_findings_atomic(findings, partial_out)
+
     return findings
 
 

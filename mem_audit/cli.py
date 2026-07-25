@@ -37,8 +37,8 @@ def main():
 @click.option("--embed-provider", type=click.Choice(["openai", "github"]), default="openai",
               show_default=True,
               help="'github' uses GitHub Models' free embeddings endpoint "
-                   "(needs GITHUB_TOKEN with 'models: read'). One batched "
-                   "call for all memory texts, so it's easy on a tight quota.")
+                   "(needs GITHUB_TOKEN with 'models: read'). Texts are embedded "
+                   "in small token-bounded batches to fit its tight per-request quota.")
 @click.option("--llm-provider", type=click.Choice(["openai", "cerebras"]), default="openai",
               show_default=True,
               help="'cerebras' uses Cerebras' free judge endpoint (needs "
@@ -49,10 +49,24 @@ def main():
               help="Override the judge model name. Required if --llm-provider=cerebras "
                    "and the default ('gpt-oss-120b') isn't in your account's current "
                    "model list — Cerebras' free catalog has changed more than once in 2026.")
-@click.option("--json-out", type=click.Path(), default=None, help="Also write findings to a JSON file.")
+@click.option("--max-retries", type=int, default=5, show_default=True,
+              help="How many times to retry a judge call that hits HTTP 429 "
+                   "before giving up on that pair. Backoff honors a retry-after "
+                   "header when present, else exponential (2/4/8/16/32s). A pair "
+                   "that exhausts its retries is skipped, not fatal.")
+@click.option("--min-request-interval", type=float, default=None,
+              help="Seconds to sleep between judge calls, to stay under a free tier's "
+                   "requests-per-minute limit. Default 0 for OpenAI; auto-set to 12.0 "
+                   "for --llm-provider=cerebras (its ~5 RPM free tier) unless you pass "
+                   "a value explicitly.")
+@click.option("--json-out", type=click.Path(), default=None,
+              help="Also write findings to a JSON file. Written incrementally "
+                   "(atomically, after each pair), so an interrupted run still "
+                   "leaves a valid partial report.")
 def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
         similarity_threshold: float | None, page_size: int,
-        embed_provider: str, llm_provider: str, llm_model: str | None, json_out: str | None):
+        embed_provider: str, llm_provider: str, llm_model: str | None,
+        max_retries: int, min_request_interval: float | None, json_out: str | None):
     """Audit a single user's memory store for duplicates, contradictions, and staleness."""
     from mem0 import Memory  # imported lazily so `mem-audit --help` doesn't require mem0ai extras
 
@@ -68,9 +82,29 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
     embed_fn = github_models_embedder() if embed_provider == "github" else openai_embedder()
 
     if llm_provider == "cerebras":
-        llm_call = cerebras_llm_judge(model=llm_model) if llm_model else cerebras_llm_judge()
+        llm_call = (
+            cerebras_llm_judge(model=llm_model, max_retries=max_retries)
+            if llm_model
+            else cerebras_llm_judge(max_retries=max_retries)
+        )
     else:
-        llm_call = default_llm_judge(model=llm_model) if llm_model else default_llm_judge()
+        llm_call = (
+            default_llm_judge(model=llm_model, max_retries=max_retries)
+            if llm_model
+            else default_llm_judge(max_retries=max_retries)
+        )
+
+    # RPM is the binding constraint on the free judge tiers (Cerebras is ~5 RPM
+    # in 2026), not the daily token budget — so throttle between calls by
+    # default there. Explicit --min-request-interval always wins.
+    if min_request_interval is None:
+        min_request_interval = 12.0 if llm_provider == "cerebras" else 0.0
+
+    skipped_pairs = 0
+
+    def on_skip(_pair) -> None:
+        nonlocal skipped_pairs
+        skipped_pairs += 1
 
     def on_stage(message: str) -> None:
         # Plain lines via click.echo, not \r-based — \r-overwrite progress
@@ -95,6 +129,9 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
             page_size=page_size,
             on_progress=on_progress,
             on_stage=on_stage,
+            min_request_interval=min_request_interval,
+            partial_out=json_out,
+            on_skip=on_skip,
         )
     except RuntimeError as e:
         raise click.ClickException(str(e))
@@ -104,7 +141,17 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
 
     print_report(findings, total_memories=total, user_id=user_id)
 
+    if skipped_pairs:
+        click.echo(
+            f"\n{skipped_pairs} pair(s) skipped due to rate limits — re-run to "
+            f"cover them, or raise --max-retries / --min-request-interval.",
+            err=True,
+        )
+
     if json_out:
+        # run_audit already flushed findings to json_out incrementally after
+        # every pair; this final write just guarantees the file exists even
+        # when there were zero candidate pairs (nothing to flush).
         export_json(findings, json_out)
         click.echo(f"\nFindings written to {json_out}")
 
