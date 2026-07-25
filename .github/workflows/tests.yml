@@ -34,3 +34,4 @@ jobs:
           PYTHONPATH=. python tests/test_embeddings.py
           PYTHONPATH=. python tests/test_resilience.py
           PYTHONPATH=. python tests/test_judge_prompt.py
+          PYTHONPATH=. python tests/test_connector_pagesize.py

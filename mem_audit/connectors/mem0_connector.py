@@ -17,6 +17,12 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Optional
 
+# mem0's legacy get_all() (the pre-filters signature, no top_k/limit) applies a
+# small default page cap when no limit is passed. Observed as 100 on the
+# self-hosted mem0.Memory path; used only as a conservative "did we hit the
+# default cap?" tripwire, never to bound the read itself.
+_MEM0_LEGACY_DEFAULT_LIMIT = 100
+
 
 @dataclass
 class MemoryRecord:
@@ -100,16 +106,31 @@ class Mem0Connector:
         return records
 
     def _fetch_all_single_page(self, user_id: str, page_size: int) -> list[MemoryRecord]:
+        limit_enforced = True
         try:
             raw = self._client.get_all(filters={"user_id": user_id}, top_k=page_size)
         except TypeError:
-            # Older mem0ai (pre-filters API) — fall back to the legacy signature.
-            raw = self._client.get_all(user_id=user_id)
+            # Older mem0ai (pre-filters API). Still try to bound the read by
+            # passing an explicit limit into the legacy signature — otherwise
+            # mem0's get_all() applies its own small default page cap (observed:
+            # 100) and we'd silently audit only the first page. A confident
+            # report over an unknown fraction of the store is worse than none.
+            try:
+                raw = self._client.get_all(user_id=user_id, limit=page_size)
+            except TypeError:
+                # This version doesn't accept a limit at all, so we cannot bound
+                # the read: mem0's own default cap decides how many come back.
+                raw = self._client.get_all(user_id=user_id)
+                limit_enforced = False
 
         items = raw.get("results", raw) if isinstance(raw, dict) else raw
         records = [self._normalize(item) for item in items]
 
-        if len(records) == page_size:
+        # Silent-truncation guard. The reader must either get everything or a
+        # loud error — a quietly partial result is never acceptable.
+        if limit_enforced and len(records) == page_size:
+            # We asked for page_size and got exactly that back: indistinguishable
+            # from a truncated page on a client with no pagination cursor.
             raise RuntimeError(
                 f"fetch_all returned exactly page_size={page_size} records for "
                 f"user_id={user_id!r}. This client (self-hosted mem0.Memory) has "
@@ -118,6 +139,22 @@ class Mem0Connector:
                 f"An audit over a silently incomplete dataset is worse than no "
                 f"audit — re-run with a larger page_size (--page-size) once "
                 f"you've confirmed roughly how many memories this user has."
+            )
+        if not limit_enforced and len(records) == _MEM0_LEGACY_DEFAULT_LIMIT:
+            # We could not bound the read and got back exactly mem0's default
+            # cap — almost certainly a truncated first page, and even if the
+            # store really has this many, we cannot prove it. Refuse rather
+            # than under-report.
+            raise RuntimeError(
+                f"fetch_all read exactly {len(records)} records for "
+                f"user_id={user_id!r} via mem0's legacy get_all(), which caps at "
+                f"its default page size ({_MEM0_LEGACY_DEFAULT_LIMIT}) and does "
+                f"not accept a limit on this mem0ai version. mem-audit cannot "
+                f"tell the full store from a truncated first page and refuses to "
+                f"audit a silently partial dataset. Upgrade mem0ai to a version "
+                f"whose get_all() accepts filters/top_k (so the page size is "
+                f"controllable), or confirm this user really has "
+                f"<{_MEM0_LEGACY_DEFAULT_LIMIT} memories."
             )
         return records
 
