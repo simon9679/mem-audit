@@ -19,8 +19,10 @@ to Mem0 by design, not a workaround for something they're about to fix.
 
 `mem-audit` doesn't replace your memory store or migrate your data anywhere.
 It connects to your existing Mem0 instance through the standard SDK
-(`get_all`, `history`), reports what it finds, and stops. You decide what to
-fix and how.
+(`get_all`), reports what it finds, and stops. You decide what to fix and how.
+(Staleness here means "a newer memory likely supersedes an older one," judged
+from the two facts themselves — not from Mem0's per-memory `history`, which the
+connector can read but the audit pipeline doesn't use yet.)
 
 ## What it catches
 
@@ -44,6 +46,14 @@ fix and how.
 
 ```bash
 pip install -e .
+```
+
+Embedding batches are sized by a cheap `len/4` token estimate by default. For
+exact token counts (via `tiktoken`), install the optional extra — it's not
+required, and CI/offline runs work without it:
+
+```bash
+pip install -e ".[precise]"
 ```
 
 ## Usage
@@ -72,10 +82,28 @@ export CEREBRAS_API_KEY=...   # free, no card — https://cloud.cerebras.ai/
 mem-audit run --user-id alice --embed-provider github --llm-provider cerebras
 ```
 
-This split is deliberate: embeddings are one batched call per audit (cheap,
-fits GitHub Models' tighter per-request quota), while the judge is called
-once per candidate pair — the actual volume driver — which is why it's
-routed to Cerebras' more generous 1M-tokens/day free tier instead.
+This split is deliberate. Embeddings are the cheap pass: the memory texts are
+sent in small, token-bounded batches (GitHub Models caps a single request at
+roughly 8K tokens, so one call over a whole store would fail — mem-audit
+chunks under that limit and stitches the vectors back in order). The judge is
+the volume driver — one call *per candidate pair* — so it's where rate limits
+actually bite.
+
+The binding constraint on these free tiers is **requests per minute**, not the
+daily token budget. Cerebras' free tier has been reported at roughly 5–30 RPM
+across 2026, and GitHub Models returns a `retry-after` on 429 that can be tens
+of thousands of seconds (a daily quota). mem-audit handles both:
+
+- `--max-retries N` (default 5) — retries a 429'd judge call with backoff,
+  honoring a `retry-after` header when present, else exponential
+  (2/4/8/16/32s). A pair that still fails is skipped, not fatal, and reported
+  in a `N pair(s) skipped due to rate limits` summary.
+- `--min-request-interval S` — sleeps `S` seconds between judge calls to stay
+  under an RPM cap. Defaults to `0` for OpenAI and auto-sets to `12.0` for
+  `--llm-provider=cerebras` (matching a ~5 RPM tier) unless you pass a value.
+
+Because `--json-out` is written incrementally (atomically, after each pair), a
+run interrupted partway through still leaves a valid partial report on disk.
 
 Cerebras' free-model catalog has changed more than once in 2026 — if the
 default (`gpt-oss-120b`) isn't in your account, pass `--llm-model <name>`
@@ -107,7 +135,12 @@ calls. Good for seeing the tool's behavior before wiring up real credentials.
    pass's output feeds this step, so cost stays roughly linear in the number
    of *near* pairs, not O(n²) LLM calls. Judging is sequential (one call
    per pair) — a progress line prints to stderr so a run with dozens of
-   candidates doesn't look hung.
+   candidates doesn't look hung. The judge's date-aware prompt shows each
+   memory's `created_at` (when known), since the time gap is what separates a
+   genuine `CONTRADICTION` from an expected `UPDATE`. 429s are retried with
+   backoff (`--max-retries`), calls can be throttled (`--min-request-interval`),
+   and `--json-out` is flushed after every pair so an interrupted run still
+   leaves a valid report.
 4. `report.py` — prints a severity-sorted table. `--json-out` for CI use.
 
 ## Measured accuracy

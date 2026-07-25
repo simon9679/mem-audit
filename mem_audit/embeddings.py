@@ -9,31 +9,150 @@ that's the lowest-friction option, but it's fully swappable.
 """
 from __future__ import annotations
 
-from typing import Callable, Sequence
+from typing import Callable, Iterator, Sequence
 
 import numpy as np
 
 EmbedFn = Callable[[Sequence[str]], np.ndarray]
 
+# Provider-specific batching defaults. A single embeddings.create() over an
+# entire memory store blows past real per-request limits — this is not
+# hypothetical:
+#   - OpenAI: max 8192 tokens per input, max 2048 array elements, and a hard
+#     ~300k-token ceiling across the whole request (HTTP 400
+#     "max_tokens_per_request" beyond it). We keep items well under 2048 and
+#     tokens under 300k with headroom.
+#   - GitHub Models: ~8K tokens per request — tighter still, so a much smaller
+#     token budget and item cap.
+# These are conservative on purpose (below the documented ceilings) so a batch
+# never lands exactly on a limit.
+_OPENAI_MAX_BATCH_TOKENS = 250_000
+_OPENAI_MAX_BATCH_ITEMS = 128
+_GITHUB_MAX_BATCH_TOKENS = 6_000
+_GITHUB_MAX_BATCH_ITEMS = 64
 
-def openai_embedder(model: str = "text-embedding-3-small", client=None) -> EmbedFn:
-    """Returns an embed_fn backed by an OpenAI-compatible client."""
+
+TokenCounter = Callable[[str], int]
+
+
+def _make_token_counter(model: str) -> TokenCounter:
+    """
+    Returns a callable(text) -> estimated token count.
+
+    Uses tiktoken for an exact count when it's installed (optional extra:
+    `pip install mem-audit[precise]`), falling back to a cheap len/4 heuristic
+    otherwise. tiktoken must stay optional — the offline demo and CI run
+    without it, so its absence can never break import or execution.
+    """
+    try:
+        import tiktoken
+    except ImportError:
+        return lambda text: len(text) // 4 + 1
+
+    try:
+        encoding = tiktoken.encoding_for_model(model)
+    except KeyError:
+        # Unknown/provider-prefixed model id (e.g. "openai/text-embedding-3-small")
+        # — cl100k_base is the right base encoding for the text-embedding-3-* family.
+        encoding = tiktoken.get_encoding("cl100k_base")
+
+    return lambda text: len(encoding.encode(text))
+
+
+def _iter_batches(
+    texts: Sequence[str],
+    count_tokens: TokenCounter,
+    max_batch_items: int,
+    max_batch_tokens: int,
+) -> Iterator[list[str]]:
+    """
+    Groups texts into batches that respect BOTH ceilings. A batch is closed
+    (and the current text starts a new one) as soon as either adding the text
+    would push the item count over max_batch_items or the running token
+    estimate over max_batch_tokens.
+
+    A single text whose own token estimate already exceeds max_batch_tokens
+    still goes out in a batch by itself — we can't split it further here, and
+    the per-input token limit is a separate concern from the per-request one.
+    """
+    batch: list[str] = []
+    batch_tokens = 0
+    for text in texts:
+        text_tokens = count_tokens(text)
+        if batch and (len(batch) >= max_batch_items or batch_tokens + text_tokens > max_batch_tokens):
+            yield batch
+            batch = []
+            batch_tokens = 0
+        batch.append(text)
+        batch_tokens += text_tokens
+    if batch:
+        yield batch
+
+
+def _embed_in_batches(
+    client,
+    model: str,
+    texts: Sequence[str],
+    count_tokens: TokenCounter,
+    max_batch_items: int,
+    max_batch_tokens: int,
+) -> np.ndarray:
+    """
+    Embeds texts in provider-safe batches and stacks the results back into a
+    single (len(texts), dim) matrix.
+
+    The vector order must line up 1:1 with the input order — downstream code
+    indexes records[i] <-> vectors[i], so any reordering silently corrupts
+    the audit. We preserve order by concatenating batch results in the same
+    order the batches were emitted (which follows input order).
+    """
+    if not texts:
+        # Preserve the historical empty-input contract: a (0, 1536) matrix so
+        # duplicates.py's shape check still passes on an empty store.
+        return np.zeros((0, 1536))
+
+    chunks: list[np.ndarray] = []
+    for batch in _iter_batches(list(texts), count_tokens, max_batch_items, max_batch_tokens):
+        resp = client.embeddings.create(model=model, input=batch)
+        vectors = [item.embedding for item in resp.data]
+        chunks.append(np.array(vectors, dtype=np.float32))
+
+    return np.vstack(chunks)
+
+
+def openai_embedder(
+    model: str = "text-embedding-3-small",
+    client=None,
+    max_batch_tokens: int = _OPENAI_MAX_BATCH_TOKENS,
+    max_batch_items: int = _OPENAI_MAX_BATCH_ITEMS,
+) -> EmbedFn:
+    """Returns an embed_fn backed by an OpenAI-compatible client.
+
+    Texts are embedded in batches sized to stay under OpenAI's per-request
+    limits (see the module-level constants); results are stacked back in
+    input order.
+    """
     if client is None:
         import openai
 
         client = openai.OpenAI()
 
+    count_tokens = _make_token_counter(model)
+
     def embed(texts: Sequence[str]) -> np.ndarray:
-        if not texts:
-            return np.zeros((0, 1536))
-        resp = client.embeddings.create(model=model, input=list(texts))
-        vectors = [item.embedding for item in resp.data]
-        return np.array(vectors, dtype=np.float32)
+        return _embed_in_batches(
+            client, model, texts, count_tokens, max_batch_items, max_batch_tokens
+        )
 
     return embed
 
 
-def github_models_embedder(model: str = "openai/text-embedding-3-small", token: str | None = None) -> EmbedFn:
+def github_models_embedder(
+    model: str = "openai/text-embedding-3-small",
+    token: str | None = None,
+    max_batch_tokens: int = _GITHUB_MAX_BATCH_TOKENS,
+    max_batch_items: int = _GITHUB_MAX_BATCH_ITEMS,
+) -> EmbedFn:
     """
     Embed_fn backed by GitHub Models' free OpenAI-compatible endpoint.
 
@@ -41,8 +160,10 @@ def github_models_embedder(model: str = "openai/text-embedding-3-small", token: 
     checked against current docs): base_url models.github.ai/inference,
     Bearer auth with a PAT that has `models: read`, model id prefixed with
     the provider ("openai/text-embedding-3-small"). This is a *free but
-    rate-limited* route — one call embeds all memory texts in a single
-    batched request, which is what keeps this cheap even on a tight quota.
+    rate-limited* route with a tight ~8K-token-per-request limit, so texts
+    are embedded in small batches (see the module-level GitHub constants)
+    rather than a single call — one call over a whole store would exceed the
+    per-request quota on even a few dozen facts.
 
     token defaults to the GITHUB_TOKEN env var if not passed explicitly.
     """
@@ -59,13 +180,12 @@ def github_models_embedder(model: str = "openai/text-embedding-3-small", token: 
         )
 
     client = openai.OpenAI(base_url="https://models.github.ai/inference", api_key=resolved_token)
+    count_tokens = _make_token_counter(model)
 
     def embed(texts: Sequence[str]) -> np.ndarray:
-        if not texts:
-            return np.zeros((0, 1536))
-        resp = client.embeddings.create(model=model, input=list(texts))
-        vectors = [item.embedding for item in resp.data]
-        return np.array(vectors, dtype=np.float32)
+        return _embed_in_batches(
+            client, model, texts, count_tokens, max_batch_items, max_batch_tokens
+        )
 
     return embed
 
