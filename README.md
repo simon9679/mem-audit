@@ -62,6 +62,14 @@ pip install -e ".[precise]"
 mem-audit run --user-id alice
 ```
 
+> If `mem-audit` isn't found after install (common on Windows, where pip puts
+> the console script in a `Scripts` directory that isn't always on your `PATH`),
+> run the exact same CLI as a module instead:
+>
+> ```bash
+> python -m mem_audit run --user-id alice
+> ```
+
 Uses your existing `mem0` config/env vars by default. To point at a specific
 config:
 
@@ -159,6 +167,18 @@ This is one test on English, short-sentence, personal-memory-style facts —
 not a claim it generalizes to every language, store size, or fact
 structure. Take it as "the approach works as designed," not "guaranteed
 accuracy on your data."
+
+Separately — and this is a **scale/plumbing check, not a second accuracy
+benchmark** — the tool has been run end-to-end against a larger 161-fact store
+on real GitHub Models embeddings (not mocks). Here 161 is the total store size,
+not a count of labelled pairs. The point of that run was to confirm the batching
+path holds real volume: the embedding pass split into multiple token-bounded
+requests (and a single unbatched request over the same volume returns the real
+`413 max-tokens-per-request` error), all 161 memories were read back with no
+silent truncation, and the handful of pairs planted in that store were
+classified correctly by a real Cerebras judge. Treat the 24-fact run above as
+the accuracy measurement; treat this one as evidence the real embedding endpoint
+survives a realistic volume.
 
 ## Related work
 
