@@ -258,12 +258,14 @@ def build_seed_texts() -> list[str]:
     for k in range(3):
         texts.append(("Journal entry %d. " % k) + long_body * 8)  # ~1800+ chars
 
-    # Two near-8K-token facts: each fact's own token estimate sits just under the
-    # real GitHub Models / OpenAI per-input ceiling (~8192), so it must be emitted
-    # in a batch by itself and probes behaviour right at the ceiling.
+    # Two near-8K-token facts: each fact's own token estimate must sit just UNDER
+    # the real GitHub Models / OpenAI per-input ceiling (~8192) — an input that
+    # exceeds it on its own is a separate error, not a chunking one. Each still
+    # overflows the per-request batch budget (6000 for GitHub), so it's emitted in
+    # a batch by itself and probes behaviour right at the ceiling.
     for k in range(2):
         texts.append(("Extended activity log %d. " % k)
-                      + " ".join("token%d" % j for j in range(3100)))  # ~7.7K tokens
+                      + " ".join("token%d" % j for j in range(2600)))  # ~7K tokens, < 8192
 
     return texts
 
@@ -367,12 +369,31 @@ def main() -> int:
     primary_batches = list(ch.counting.embeddings.batches)
     rows, max_items, max_tokens_multi, oversized = _batch_stats(primary_batches, count_tokens)
 
-    # order integrity: batched vectors must equal per-text single embeddings, 1:1.
-    ref = np.vstack([
-        np.asarray(ch.counting.raw_single(ch.model, t), dtype=np.float32) for t in texts
-    ])
+    # Order integrity: each batched vector must match a fresh single embedding of
+    # the SAME text. We compare by cosine, not exact equality: real
+    # text-embedding-3-small is not bit-identical across requests (batch vs single
+    # differ by ~1e-3 from server-side nondeterminism), so a strict allclose would
+    # false-fail. A scrambled order would instead drop cosine far below 1.0.
+    # Sampled indices only (batch boundaries, tail, oversized singles) so we don't
+    # fire N extra single-embed calls at a real metered provider.
     shape_ok = V_full.shape == (seeded, ch.dim)
-    order_ok = V_full.shape == ref.shape and np.allclose(V_full, ref, atol=1e-4)
+    candidate_idx = ([0, ch.max_items - 1, ch.max_items, seeded // 2,
+                      seeded - 3, seeded - 2, seeded - 1]
+                     + list(range(0, seeded, max(1, seeded // 6))))
+    sample_idx = sorted({i for i in candidate_idx if 0 <= i < seeded})
+
+    def _cos(a, b):
+        return float(np.dot(a, b) / ((np.linalg.norm(a) + 1e-9) * (np.linalg.norm(b) + 1e-9)))
+
+    order_ok = True
+    order_min_cos = 1.0
+    for i in sample_idx:
+        single = np.asarray(ch.counting.raw_single(ch.model, texts[i]), dtype=np.float32)
+        cos = _cos(V_full[i], single)
+        order_min_cos = min(order_min_cos, cos)
+        if cos < 0.98:
+            order_ok = False
+            break
 
     # ---- Steps 1-2: real Mem0 store + end-to-end audit path ----
     log("Steps 1-2: seeding a real Mem0 store and running the end-to-end pipeline...")
@@ -447,6 +468,36 @@ def main() -> int:
     total_tokens_all = sum(count_tokens(t) for t in texts)
     biggest = max(count_tokens(t) for t in texts)
 
+    # ---- Step 3: real negative ceiling check (live, real provider only) ----
+    # A single unbatched create() must fail once the request exceeds the real
+    # per-request token ceiling (measured: 64000 for GitHub Models). The 161-fact
+    # set (~16.7K tokens) is under that, so we build a compact probe set that
+    # clears it: ~11 near-7K inputs (each < 8192 per-input, > 64000 in total).
+    # Raw single call over the probe set -> expected 413; the batched path over
+    # the SAME set -> pass. Direct proof the fix solves a real endpoint problem.
+    neg = None  # (raw_failed, detail, batched_ok, big_n, big_tokens)
+    if ch.provider in ("github_models", "openai"):
+        block = "Ceiling probe %d. " + " ".join("token%d" % j for j in range(2600))
+        big = [block % k for k in range(11)]  # 11 * ~6.8K ~= 75K tokens, over 64000
+        big_tokens = sum(count_tokens(t) for t in big)
+        log("Step 3: raw unbatched create() over %d near-7K inputs (~%d tokens, expect 413)..."
+            % (len(big), big_tokens))
+        raw_failed, detail = False, ""
+        try:
+            ch.counting._inner.embeddings.create(model=ch.model, input=list(big))
+            detail = ("raw single call unexpectedly SUCCEEDED at ~%d tokens — provider "
+                      "per-request ceiling is higher than this probe set" % big_tokens)
+        except Exception as e:  # noqa: BLE001
+            raw_failed = True
+            detail = "%s: %s" % (type(e).__name__, str(e)[:300])
+        batched_ok = False
+        try:
+            Vb = ch.embed_fn(big)
+            batched_ok = Vb.shape == (len(big), ch.dim)
+        except Exception as e:  # noqa: BLE001
+            detail += "  | batched path FAILED: %s: %s" % (type(e).__name__, str(e)[:200])
+        neg = (raw_failed, detail, batched_ok, len(big), big_tokens)
+
     # ---- Report ----
     emit("=" * 72)
     emit("LIVE SMOKE TEST -- embedding chunking on real volume")
@@ -470,7 +521,8 @@ def main() -> int:
     emit("                                   budget -> emitted alone, cannot be split)")
     emit("Final matrix shape:                %s   %s"
          % (str(tuple(V_full.shape)), "PASS" if shape_ok else "FAIL"))
-    emit("Vector order 1:1 (batched==single):%s" % ("   PASS" if order_ok else "   FAIL"))
+    emit("Vector order (cosine>=0.98, %d idx): %s  (min cos %.4f)"
+         % (len(sample_idx), "PASS" if order_ok else "FAIL", order_min_cos))
     emit("")
     emit("Batch table (first 14 of %d):" % len(primary_batches))
     emit("  %-6s %-8s %-12s" % ("batch", "items", "~tokens"))
@@ -507,26 +559,34 @@ def main() -> int:
     else:
         emit("  " + real_desc)
     emit("")
-    emit("-- Step 4: negative ceiling check ----------------------------------")
-    if ch.provider in ("github_models", "openai"):
-        emit("  (real provider key present -- a live raw single-call ceiling test")
-        emit("   could be added; not run automatically to avoid burning quota.)")
+    emit("-- Step 3: negative ceiling check (live raw single call) -----------")
+    emit("  main set: %d facts, %d tokens total; biggest single fact %d tokens (< 8192)"
+         % (seeded, total_tokens_all, biggest))
+    if neg is not None:
+        raw_failed, detail, batched_ok, big_n, big_tokens = neg
+        emit("  probe set: %d near-7K inputs, ~%d tokens (over the measured 64000 ceiling)"
+             % (big_n, big_tokens))
+        if raw_failed:
+            emit("  RAW unbatched create(input=probe_set) -> FAILED as expected:")
+            emit("    %s" % detail)
+        else:
+            emit("  RAW call did NOT fail: %s" % detail)
+        emit("  BATCHED embedder over the SAME probe set -> %s"
+             % ("PASSED" if batched_ok else "FAILED"))
     else:
-        emit("  SKIPPED: local embedder, no real provider key -- cannot produce a live")
-        emit("  HTTP 400. Numeric argument instead:")
-        emit("    total tokens across all %d facts:  %d" % (seeded, total_tokens_all))
-        emit("    single biggest fact (tokens):      %d" % biggest)
-        emit("    real per-request ceiling (~GitHub): ~8192 tokens")
-        emit("    -> one unbatched create() over this set is %.1fx over the limit;"
-             % (total_tokens_all / 8192.0))
-        emit("       it would fail with HTTP 400 max_tokens_per_request. Batched path passed.")
+        emit("  SKIPPED: local embedder, no real provider key -- numeric argument only:")
+        emit("  one unbatched create() over the main set is %.1fx the ~8192 per-input"
+             % (biggest / 8192.0))
+        emit("  figure; batched path passed above.")
     emit("")
     emit("=" * 72)
     chunking_ok = (len(primary_batches) > 1 and max_items <= ch.max_items
                    and max_tokens_multi <= ch.max_tokens and shape_ok and order_ok)
-    emit("VERDICT: chunking holds on real volume: %s" % ("YES" if chunking_ok else "NO"))
+    neg_ok = (neg is None) or (neg[0] and neg[2])  # raw failed AND batched passed
+    verdict_ok = chunking_ok and neg_ok
+    emit("VERDICT: chunking holds on real volume: %s" % ("YES" if verdict_ok else "NO"))
     emit("=" * 72)
-    return 0 if chunking_ok else 1
+    return 0 if verdict_ok else 1
 
 
 if __name__ == "__main__":
