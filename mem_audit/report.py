@@ -13,6 +13,16 @@ _SEVERITY_STYLE = {
     Severity.LOW: "dim",
 }
 
+# Explicit display order for the report — HIGH first, because the whole point
+# of an audit is to surface the findings most likely to cause bad behavior at
+# the top. Kept as an explicit map (not the enum declaration order) so that
+# reordering the Severity members can never silently flip the report.
+_SEVERITY_ORDER = {
+    Severity.HIGH: 0,
+    Severity.MEDIUM: 1,
+    Severity.LOW: 2,
+}
+
 
 def print_report(findings: list[Finding], total_memories: int, user_id: str) -> None:
     console = Console()
@@ -22,7 +32,7 @@ def print_report(findings: list[Finding], total_memories: int, user_id: str) -> 
         console.print("[green]No duplicates, contradictions, or stale facts found.[/green]")
         return
 
-    by_severity = sorted(findings, key=lambda f: list(Severity).index(f.severity))
+    by_severity = sorted(findings, key=lambda f: _SEVERITY_ORDER.get(f.severity, len(_SEVERITY_ORDER)))
 
     table = Table(show_lines=True)
     table.add_column("Severity")

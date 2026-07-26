@@ -62,8 +62,30 @@ def test_partial_dates_only_label_the_record_that_has_one():
     assert '(newer):' in prompt
 
 
+def test_equal_timestamps_order_deterministically_by_id():
+    """
+    Two records with identical, non-empty created_at must produce the SAME
+    prompt regardless of the order they're handed to judge_pair. Before the
+    fix the id tiebreaker lived in an `elif` that only ran when a created_at
+    was missing, so equal timestamps left the pair in connector order — and
+    the assembled prompt flipped depending on input order.
+    """
+    ts = datetime(2026, 2, 2, 9, 30, tzinfo=timezone.utc)
+    a = MemoryRecord(id="m1", text="I live in Berlin", created_at=ts)
+    b = MemoryRecord(id="m2", text="I live in Madrid", created_at=ts)
+
+    prompt_ab = _capture_prompt(a, b)
+    prompt_ba = _capture_prompt(b, a)
+
+    assert prompt_ab == prompt_ba
+    # And the deterministic order is by id, so the lower id ("m1", Berlin) is
+    # the "older" slot in both.
+    assert prompt_ab.index("Berlin") < prompt_ab.index("Madrid")
+
+
 if __name__ == "__main__":
     test_dates_appear_in_prompt_when_present()
     test_no_date_line_when_both_dates_missing()
     test_partial_dates_only_label_the_record_that_has_one()
+    test_equal_timestamps_order_deterministically_by_id()
     print("Judge prompt date tests passed.")

@@ -257,25 +257,31 @@ def judge_pair(record_a: MemoryRecord, record_b: MemoryRecord, llm_call: LLMCall
     # that happens, fall back to the pair's original order rather than
     # crashing the whole audit over one unorderable pair.
     a, b = record_a, record_b
+    ordered_by_time = False
     if a.created_at and b.created_at:
         try:
             if a.created_at > b.created_at:
                 a, b = b, a
+            ordered_by_time = a.created_at != b.created_at
         except TypeError:
-            pass
-    elif a.id and b.id:
-        # No usable created_at on one or both records — order is otherwise
-        # whatever the connector happened to return, which is not stable
-        # across runs/pagination. Fall back to a deterministic tiebreaker
-        # (id string) so "older"/"newer" in the prompt is at least
+            # Mixed naive/aware datetimes slipped past _parse_dt (e.g. a
+            # MemoryRecord built directly in a test/other connector). Fall
+            # back to the id tiebreaker below rather than crashing.
+            ordered_by_time = False
+
+    if not ordered_by_time and a.id and b.id:
+        # Either no usable created_at, or both timestamps are equal — order is
+        # otherwise whatever the connector happened to return, which is not
+        # stable across runs/pagination. Fall back to a deterministic
+        # tiebreaker (id string) so "older"/"newer" in the prompt is at least
         # consistent run-to-run, even if not temporally meaningful.
         #
-        # This also covers same-timestamp collisions: memories added in
-        # rapid succession (e.g. batch-seeding, migration) can land on the
+        # Same-timestamp collisions are the common real case here: memories
+        # added in rapid succession (batch-seeding, migration) can land on the
         # same created_at value depending on the backend's timestamp
-        # resolution, which makes `>` return False either way and leaves
-        # the pair in whatever order the connector returned — not
-        # necessarily insertion order.
+        # resolution, so `>` returns False either way and leaves the pair in
+        # whatever order the connector returned — not necessarily insertion
+        # order.
         if a.id > b.id:
             a, b = b, a
 
@@ -313,6 +319,28 @@ def _build_judge_prompt(a: MemoryRecord, b: MemoryRecord) -> str:
     )
 
 
+def _clip(text: str, limit: int = 60) -> str:
+    """
+    Shorten `text` for a one-line summary without cutting mid-word.
+
+    A raw text[:limit] slice produces dangling fragments like
+    "...eats up close to an hour, one directio" — the summary is the first
+    thing a human reads, so trim back to the last whole word and append an
+    ellipsis instead.
+
+    - Text already within `limit` is returned unchanged, with no ellipsis.
+    - Longer text is cut back to the last space that fits.
+    - Text with no space to break on (e.g. a long URL) is hard-cut at `limit`
+      as a last resort, so the helper never returns an empty string.
+    """
+    if len(text) <= limit:
+        return text
+    head = text[:limit].rsplit(" ", 1)[0]
+    if not head:  # first word alone already exceeds limit — nothing to break on
+        head = text[:limit]
+    return head + "…"
+
+
 def _finding_for(result: JudgeResult, a: MemoryRecord, b: MemoryRecord) -> Optional[Finding]:
     """
     Maps a judge label to a Finding, or None for UNRELATED.
@@ -330,7 +358,7 @@ def _finding_for(result: JudgeResult, a: MemoryRecord, b: MemoryRecord) -> Optio
             type=FindingType.DUPLICATE,
             severity=Severity.LOW,
             memory_ids=[a.id, b.id],
-            summary=f'Duplicate: "{a.text[:60]}" ~ "{b.text[:60]}"',
+            summary=f'Duplicate: "{_clip(a.text)}" ~ "{_clip(b.text)}"',
             detail=result.rationale,
             suggested_action="Same fact stored twice — safe to merge.",
         )
@@ -339,7 +367,7 @@ def _finding_for(result: JudgeResult, a: MemoryRecord, b: MemoryRecord) -> Optio
             type=FindingType.CONTRADICTION,
             severity=Severity.HIGH,
             memory_ids=[a.id, b.id],
-            summary=f'Contradiction: "{a.text[:60]}" vs "{b.text[:60]}"',
+            summary=f'Contradiction: "{_clip(a.text)}" vs "{_clip(b.text)}"',
             detail=result.rationale,
             suggested_action=(
                 "These cannot both be true. Confirm which is current and "
@@ -352,7 +380,7 @@ def _finding_for(result: JudgeResult, a: MemoryRecord, b: MemoryRecord) -> Optio
             type=FindingType.STALE,
             severity=Severity.MEDIUM,
             memory_ids=[a.id, b.id],
-            summary=f'Likely superseded: "{a.text[:60]}" -> "{b.text[:60]}"',
+            summary=f'Likely superseded: "{_clip(a.text)}" -> "{_clip(b.text)}"',
             detail=result.rationale,
             suggested_action="Consider retiring the older memory to avoid stale retrieval.",
         )

@@ -9,6 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from mem_audit.connectors.mem0_connector import (  # noqa: E402
+    _MAX_PAGES,
     _MEM0_LEGACY_DEFAULT_LIMIT,
     Mem0Connector,
 )
@@ -60,6 +61,24 @@ class LegacyNoLimitClient:
         return {"results": _rows(min(self._total, _MEM0_LEGACY_DEFAULT_LIMIT), uid)}
 
 
+class NeverTerminatingCursorClient:
+    """
+    Platform-style client whose cursor never ends: every page reports a
+    non-null `next`. Simulates a broken/looping API. Used to exercise the
+    pagination circuit breaker directly (the classifier would treat a bare
+    fake as 'oss' when mem0 isn't installed, so we call the paginated method
+    itself).
+    """
+
+    def __init__(self):
+        self.calls = 0
+
+    def get_all(self, filters=None, page=1, page_size=500, **kwargs):
+        self.calls += 1
+        uid = (filters or {}).get("user_id")
+        return {"results": _rows(1, uid), "next": "cursor", "previous": None}
+
+
 def _raises_runtime(fn):
     try:
         fn()
@@ -106,6 +125,17 @@ def test_legacy_no_limit_ok_when_store_smaller_than_cap():
     assert len(recs) == 42
 
 
+# -- paginated (Platform) path: never-ending cursor must not loop forever ---- #
+def test_paginated_never_terminating_cursor_raises_at_page_ceiling():
+    client = NeverTerminatingCursorClient()
+    conn = Mem0Connector(client)
+    # Call the paginated method directly: without mem0 installed, the client
+    # classifier would route a fake to the single-page path.
+    assert _raises_runtime(lambda: conn._fetch_all_paginated(user_id="u", page_size=500))
+    # It bailed at the page ceiling instead of spinning forever.
+    assert client.calls <= _MAX_PAGES + 1
+
+
 if __name__ == "__main__":
     test_modern_client_reads_all_below_page_size()
     test_modern_client_raises_at_page_size_ceiling()
@@ -113,4 +143,5 @@ if __name__ == "__main__":
     test_legacy_limit_raises_when_hitting_page_size()
     test_legacy_no_limit_raises_at_default_cap()
     test_legacy_no_limit_ok_when_store_smaller_than_cap()
+    test_paginated_never_terminating_cursor_raises_at_page_ceiling()
     print("Connector page_size guard tests passed.")
