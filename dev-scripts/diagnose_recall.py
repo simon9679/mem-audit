@@ -11,9 +11,10 @@ import os
 from mem0 import Memory
 
 from mem_audit.connectors.mem0_connector import Mem0Connector
-from mem_audit.embeddings import github_models_embedder, cosine_similarity_matrix
+from mem_audit.embeddings import cosine_similarity_matrix
 from mem_audit.detectors.duplicates import find_duplicate_candidates
-from mem_audit.detectors.contradictions import cerebras_llm_judge, judge_pair
+from mem_audit.detectors.contradictions import judge_pair
+from mem_audit.providers import embedder_from_preset, judge_from_preset
 
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"].strip()
 CEREBRAS_API_KEY = os.environ["CEREBRAS_API_KEY"].strip()
@@ -48,7 +49,7 @@ connector = Mem0Connector(client)
 records = connector.fetch_all(user_id="confidencetest")
 print(f"Fetched {len(records)} records\n")
 
-embed_fn = github_models_embedder(token=GITHUB_TOKEN)
+embed_fn = embedder_from_preset("github", api_key=GITHUB_TOKEN)
 texts = [r.text for r in records]
 vectors = embed_fn(texts)
 sims = cosine_similarity_matrix(vectors)
@@ -81,7 +82,7 @@ for a_text, b_text in MISSED_PAIRS:
     print(f"  in top-5: {in_top5}   '{a_text[:40]}' <-> '{b_text[:40]}'")
 
 print("\n=== If they WERE candidates, what did the real judge actually say? ===")
-llm_call = cerebras_llm_judge(api_key=CEREBRAS_API_KEY)
+llm_call = judge_from_preset("cerebras", api_key=CEREBRAS_API_KEY)
 for a_text, b_text in MISSED_PAIRS:
     i, j = text_to_idx[a_text], text_to_idx[b_text]
     result = judge_pair(records[i], records[j], llm_call)

@@ -13,7 +13,7 @@ import numpy as np  # noqa: E402
 from mem_audit.embeddings import (  # noqa: E402
     _iter_batches,
     _make_token_counter,
-    openai_embedder,
+    openai_compatible_embedder,
 )
 
 
@@ -53,7 +53,9 @@ def test_large_input_is_split_by_item_ceiling_order_preserved():
     n = 5000
     texts = [f"marker-{i}" for i in range(n)]
     client = FakeClient()
-    embed = openai_embedder(client=client, max_batch_items=128, max_batch_tokens=250_000)
+    embed = openai_compatible_embedder(
+        model="text-embedding-3-small", client=client, max_batch_items=128, max_batch_tokens=250_000
+    )
 
     vectors = embed(texts)
 
@@ -72,7 +74,7 @@ def test_large_input_is_split_by_item_ceiling_order_preserved():
 
 def test_empty_input_returns_zero_matrix_without_calling_client():
     client = FakeClient()
-    embed = openai_embedder(client=client)
+    embed = openai_compatible_embedder(model="text-embedding-3-small", client=client)
     vectors = embed([])
     assert vectors.shape == (0, 1536)
     assert client.calls == []
@@ -80,7 +82,7 @@ def test_empty_input_returns_zero_matrix_without_calling_client():
 
 def test_single_text_one_call():
     client = FakeClient()
-    embed = openai_embedder(client=client)
+    embed = openai_compatible_embedder(model="text-embedding-3-small", client=client)
     vectors = embed(["marker-0"])
     assert len(client.calls) == 1
     assert vectors.shape == (1, 3)
@@ -113,6 +115,28 @@ def test_oversized_single_text_still_emitted_alone():
     assert ["x" * 100] in batches
 
 
+def test_missing_api_key_raises_valueerror_without_needing_openai():
+    # With no client injected, the factory resolves/validates the key itself.
+    # That check must NOT depend on the openai package being importable (CI
+    # installs neither openai nor mem0ai): a missing key is a self-contained
+    # ValueError naming the env var, raised before openai is imported. A custom
+    # env-var name keeps this deterministic regardless of the local environment.
+    import os
+
+    saved = os.environ.pop("MEMAUDIT_TEST_KEY", None)
+    try:
+        raised = False
+        try:
+            openai_compatible_embedder(model="m", api_key_env="MEMAUDIT_TEST_KEY")
+        except ValueError as e:
+            raised = True
+            assert "MEMAUDIT_TEST_KEY" in str(e)
+        assert raised, "expected ValueError naming the env var"
+    finally:
+        if saved is not None:
+            os.environ["MEMAUDIT_TEST_KEY"] = saved
+
+
 def test_token_counter_falls_back_gracefully():
     # Whether or not tiktoken is installed, the counter is callable and returns
     # a positive integer for non-empty text.
@@ -128,5 +152,6 @@ if __name__ == "__main__":
     test_single_text_one_call()
     test_token_ceiling_closes_batch()
     test_oversized_single_text_still_emitted_alone()
+    test_missing_api_key_raises_valueerror_without_needing_openai()
     test_token_counter_falls_back_gracefully()
     print("Embedding batching tests passed.")

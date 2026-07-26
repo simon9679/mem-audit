@@ -14,7 +14,7 @@ to the repo, audit stays read-only):
             1. GITHUB_TOKEN (ascii, models:read)  -> github_models path (6000/64)
             2. OPENAI_API_KEY                      -> openai path        (250000/128)
             3. else local sentence-transformers    -> wrapped in an OpenAI-embeddings-
-               shaped adapter and fed to openai_embedder() with ARTIFICIALLY LOW
+               shaped adapter and fed to openai_compatible_embedder() with ARTIFICIALLY LOW
                thresholds (32 items / 2000 tokens) so a small local set still
                produces >1 batch and exercises the same chunking/stitching code.
   Step 1  Bring up a real self-hosted mem0.Memory (huggingface embedder + embedded
@@ -51,12 +51,12 @@ import numpy as np  # noqa: E402
 
 from datetime import datetime, timedelta, timezone  # noqa: E402
 
-from mem_audit.embeddings import _make_token_counter, openai_embedder  # noqa: E402
+from mem_audit.embeddings import _make_token_counter, openai_compatible_embedder  # noqa: E402
 from mem_audit.detectors.duplicates import CandidatePair  # noqa: E402
 from mem_audit.detectors.contradictions import (  # noqa: E402
     _build_judge_prompt,
-    cerebras_llm_judge,
     find_contradictions,
+    openai_compatible_judge,
 )
 from mem_audit.connectors.mem0_connector import MemoryRecord, Mem0Connector  # noqa: E402
 
@@ -147,7 +147,7 @@ def build_embedder() -> EmbedderChoice:
         raw = openai.OpenAI(base_url="https://models.github.ai/inference", api_key=gh)
         counting = _CountingClient(raw)
         model = "openai/text-embedding-3-small"
-        fn = openai_embedder(model=model, client=counting, max_batch_items=64, max_batch_tokens=6000)
+        fn = openai_compatible_embedder(model=model, client=counting, max_batch_items=64, max_batch_tokens=6000)
         return EmbedderChoice(fn, counting, "github_models", model, 1536, 64, 6000,
                               "real GitHub Models per-request thresholds")
 
@@ -157,7 +157,7 @@ def build_embedder() -> EmbedderChoice:
         raw = openai.OpenAI(api_key=openai_key)
         counting = _CountingClient(raw)
         model = "text-embedding-3-small"
-        fn = openai_embedder(model=model, client=counting, max_batch_items=128, max_batch_tokens=250_000)
+        fn = openai_compatible_embedder(model=model, client=counting, max_batch_items=128, max_batch_tokens=250_000)
         return EmbedderChoice(fn, counting, "openai", model, 1536, 128, 250_000,
                               "real OpenAI per-request thresholds")
 
@@ -167,7 +167,7 @@ def build_embedder() -> EmbedderChoice:
     st_client = _LocalSTClient("all-MiniLM-L6-v2")
     counting = _CountingClient(st_client)
     model = "local-sentence-transformers/all-MiniLM-L6-v2"
-    fn = openai_embedder(model=model, client=counting, max_batch_items=32, max_batch_tokens=2000)
+    fn = openai_compatible_embedder(model=model, client=counting, max_batch_items=32, max_batch_tokens=2000)
     return EmbedderChoice(fn, counting, "local_sentence_transformers", model, 384, 32, 2000,
                           "ARTIFICIALLY LOW thresholds (32 items / 2000 tokens) to force multi-batch")
 
@@ -448,7 +448,13 @@ def main() -> int:
 
         log("Real judge: classifying %d planted pairs with Cerebras gpt-oss-120b (throttled)..."
             % len(planted_pairs))
-        judge = cerebras_llm_judge(api_key=cerebras_key, model="gpt-oss-120b", max_retries=5)
+        judge = openai_compatible_judge(
+            model="gpt-oss-120b",
+            base_url="https://api.cerebras.ai/v1",
+            api_key=cerebras_key,
+            api_key_env="CEREBRAS_API_KEY",
+            max_retries=5,
+        )
 
         def on_skip(_pair):
             skipped_count["n"] += 1
