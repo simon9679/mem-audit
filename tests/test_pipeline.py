@@ -100,6 +100,43 @@ def test_no_crash_on_single_memory():
     assert total == 1
 
 
+def test_run_audit_populates_report_metadata():
+    """run_audit fills the passed metadata dict with the run's counts/verdicts."""
+    meta = {}
+    client = FakeMem0Client(FAKE_MEMORIES)
+    findings, total = run_audit(
+        mem0_client=client,
+        user_id="demo",
+        embed_fn=fake_embed_fn,
+        llm_call=fake_llm_judge,
+        min_similarity=0.30,
+        report_metadata=meta,
+    )
+    assert meta["memories_scanned"] == total == 9
+    assert meta["candidate_pairs"] >= len(findings)
+    verdicts = meta["judge_verdicts"]
+    assert set(verdicts) == {"DUPLICATE", "CONTRADICTION", "UPDATE", "UNRELATED", "skipped"}
+    # Every candidate pair was judged exactly once (no rate-limit skips here).
+    assert sum(verdicts.values()) == meta["candidate_pairs"]
+    assert verdicts["skipped"] == 0
+
+
+def test_run_audit_metadata_on_tiny_store():
+    """< 2 memories: metadata still gets scanned count, zero pairs, zeroed verdicts."""
+    meta = {}
+    findings, total = run_audit(
+        mem0_client=FakeMem0Client(FAKE_MEMORIES[:1]),
+        user_id="demo",
+        embed_fn=fake_embed_fn,
+        llm_call=fake_llm_judge,
+        report_metadata=meta,
+    )
+    assert findings == [] and total == 1
+    assert meta["memories_scanned"] == 1
+    assert meta["candidate_pairs"] == 0
+    assert sum(meta["judge_verdicts"].values()) == 0
+
+
 def test_raises_when_oss_client_hits_page_size_ceiling():
     """
     Regression test: a self-hosted (non-MemoryClient) client that returns
@@ -129,6 +166,8 @@ if __name__ == "__main__":
     test_unrelated_pair_does_not_leak_into_findings()
     test_unrelated_memory_produces_no_findings()
     test_no_crash_on_single_memory()
+    test_run_audit_populates_report_metadata()
+    test_run_audit_metadata_on_tiny_store()
     test_raises_when_oss_client_hits_page_size_ceiling()
     print("All tests passed.")
 

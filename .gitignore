@@ -13,4 +13,5 @@ report.json
 
 confidence_config.json
 confidence_report*.json
+confidence_ground_truth.json
 confidence_test_qdrant_db/

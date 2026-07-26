@@ -247,32 +247,60 @@ default embedder needs `OPENAI_API_KEY`).
 
 ## Measured accuracy
 
-Ran against a 24-fact synthetic memory store with known ground truth (7
-deliberately-planted duplicate/contradiction/update pairs, paraphrased —
-not template swaps — plus a topically-related-but-not-duplicate "trap"
-pair and 8 unrelated facts as noise), through the real CLI with real
-providers (GitHub Models embeddings + Cerebras judge, not mocks):
+Three runs against the **same** 24-fact synthetic store with known ground truth
+(7 planted pairs — 3 duplicate, 2 contradiction, 2 update — paraphrased, not
+template swaps; plus one topically-related "trap" pair and 8 noise facts),
+through the real CLI with real providers (GitHub Models embeddings + Cerebras
+`gpt-oss-120b` judge, not mocks). Run 1 is when the tool was first written; runs
+2 and 3 were done back-to-back later, on a fresh clone and a fresh store.
 
-- **7/7 planted pairs caught** (3 duplicates, 2 contradictions, 2 updates)
-- **0 false positives** — the trap pair and all 8 noise facts correctly
-  produced no findings
+| | run 1 | run 2 | run 3 |
+| --- | --- | --- | --- |
+| candidate pairs | — | 76 | 76 |
+| findings | 7 | 10 | 10 |
+| planted pairs caught (recall) | 7/7 | 7/7 | 7/7 |
+| false positives | 0 | 3 | 3 |
+| update pairs typed as CONTRADICTION | 0 | 2 | 2 |
 
-This is one test on English, short-sentence, personal-memory-style facts —
-not a claim it generalizes to every language, store size, or fact
-structure. Take it as "the approach works as designed," not "guaranteed
-accuracy on your data."
+What holds across all three:
 
-Separately — and this is a **scale/plumbing check, not a second accuracy
-benchmark** — the tool has been run end-to-end against a larger 161-fact store
-on real GitHub Models embeddings (not mocks). Here 161 is the total store size,
-not a count of labelled pairs. The point of that run was to confirm the batching
-path holds real volume: the embedding pass split into multiple token-bounded
-requests (and a single unbatched request over the same volume returns the real
-`413 max-tokens-per-request` error), all 161 memories were read back with no
-silent truncation, and the handful of pairs planted in that store were
-classified correctly by a real Cerebras judge. Treat the 24-fact run above as
-the accuracy measurement; treat this one as evidence the real embedding endpoint
-survives a realistic volume.
+- **Recall is stable: 7/7 every time.** The trap pair and all 8 noise facts
+  stayed clean in every run — zero missed pairs, and the hard "don't flag the
+  near-miss" direction never failed.
+- **Within one environment the tool is deterministic.** Runs 2 and 3 were
+  identical: the same 76 candidate pairs, the same 10 findings, a full match on
+  memory ids. So this is *not* LLM sampling noise (`temperature=0.0`, and two
+  consecutive runs agreed exactly).
+
+What shifted between run 1 and the later pair:
+
+- **7 findings became 10** — i.e. 0 false positives became 3 (a data-analyst
+  fact matched against an engineering-degree fact twice, and a commute fact
+  against a barista fact).
+- **Two update pairs came back as CONTRADICTION instead of stale/update** —
+  the pair was found correctly, but typed wrong.
+
+We could not establish the cause, and cannot establish it retroactively,
+because those early reports **stored nothing about how they were produced** —
+no model version, no parameters. What we ruled out, from the evidence: our own
+code (the judge prompt, `temperature`, model name, and candidate-selection code
+are byte-identical across the runs), stale database state (fresh clone, fresh
+store, 24 memories scanned with 24 distinct timestamps), and in-session LLM
+non-determinism (runs 2 and 3 were identical). What remains — and can't be
+recovered after the fact — is a silent change to the model or embedder behind
+the same name between measurements separated by time.
+
+That gap is why `--json-out` reports now embed a `metadata` block (tool version,
+provider and **actual** model names, all parameters, candidate-pair count, and
+the judge's verdict distribution): so two runs can be compared, and the next
+drift is diagnosable instead of a mystery. `dev-scripts/analyze_confidence_test.py`
+scores a run against the planted pairs by memory id (no eyeballing paraphrased
+text), and the same computation is checked in `tests/test_confidence_analysis.py`.
+
+**What this means for you:** rely on recall — mem-audit is good at *surfacing*
+the pairs. Treat the *type* of a finding and the *absence* of extras as things
+to confirm by eye. That is exactly the position the tool takes anyway:
+read-only, human-in-the-loop. It flags; you decide.
 
 ## Related work
 

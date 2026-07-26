@@ -23,6 +23,7 @@ def run_audit(
     min_request_interval: float = 0.0,
     partial_out: str | None = None,
     on_skip: Callable[[CandidatePair], None] | None = None,
+    report_metadata: dict | None = None,
 ) -> tuple[list[Finding], int]:
     """
     Full pipeline: fetch -> cheap embedding-similarity pass -> LLM judge on
@@ -49,7 +50,16 @@ def run_audit(
     connector = Mem0Connector(mem0_client)
     records = connector.fetch_all(user_id=user_id, page_size=page_size)
 
+    if report_metadata is not None:
+        report_metadata["memories_scanned"] = len(records)
+
     if len(records) < 2:
+        if report_metadata is not None:
+            report_metadata["candidate_pairs"] = 0
+            report_metadata.setdefault(
+                "judge_verdicts",
+                {"DUPLICATE": 0, "CONTRADICTION": 0, "UPDATE": 0, "UNRELATED": 0, "skipped": 0},
+            )
         return [], len(records)
 
     if on_stage:
@@ -63,6 +73,9 @@ def run_audit(
         threshold=similarity_threshold,
     )
 
+    if report_metadata is not None:
+        report_metadata["candidate_pairs"] = len(candidate_pairs)
+
     if on_stage:
         on_stage(f"Found {len(candidate_pairs)} candidate pair(s) — judging...")
 
@@ -73,5 +86,6 @@ def run_audit(
         min_request_interval=min_request_interval,
         partial_out=partial_out,
         on_skip=on_skip,
+        report_metadata=report_metadata,
     )
     return findings, len(records)

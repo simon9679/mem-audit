@@ -19,8 +19,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
 
+from mem_audit import __version__
 from mem_audit.pipeline import run_audit
-from mem_audit.report import print_report
+from mem_audit.report import export_json, print_report
 
 
 class FakeMem0Client:
@@ -89,12 +90,45 @@ def fake_llm_judge(prompt: str) -> str:
 
 
 if __name__ == "__main__":
+    import argparse
+    import datetime
+
+    parser = argparse.ArgumentParser(description="mem-audit offline demo (no keys, no network).")
+    parser.add_argument("--json-out", default=None,
+                        help="Also write the report (with run metadata) to this path.")
+    args = parser.parse_args()
+
+    top_k, min_similarity = 5, 0.30
+
+    # Same run-metadata shape the real CLI writes, so --json-out here produces a
+    # self-describing {metadata, findings} report — with fake provider names,
+    # since this demo uses canned embeddings and a canned judge.
+    report_metadata = {
+        "tool": "mem-audit",
+        "version": __version__,
+        "run_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "user_id": "demo",
+        "embedder": {"provider": "demo-fake", "model": "canned-embeddings", "base_url": None},
+        "judge": {"provider": "demo-fake", "model": "canned-judge", "base_url": None},
+        "params": {
+            "top_k": top_k, "min_similarity": min_similarity, "similarity_threshold": None,
+            "max_retries": 0, "min_request_interval": 0.0, "page_size": 500,
+        },
+    }
+
     client = FakeMem0Client(FAKE_MEMORIES)
     findings, total = run_audit(
         mem0_client=client,
         user_id="demo",
         embed_fn=fake_embed_fn,
         llm_call=fake_llm_judge,
-        min_similarity=0.30,
+        top_k=top_k,
+        min_similarity=min_similarity,
+        report_metadata=report_metadata,
     )
-    print_report(findings, total_memories=total, user_id="demo")
+    run_line = f"embedder: canned-embeddings · judge: canned-judge · top-k: {top_k}"
+    print_report(findings, total_memories=total, user_id="demo", run_line=run_line)
+
+    if args.json_out:
+        export_json(findings, args.json_out, metadata=report_metadata)
+        print(f"\nReport written to {args.json_out}")

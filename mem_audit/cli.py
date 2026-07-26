@@ -215,6 +215,43 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
     if min_request_interval is None:
         min_request_interval = 0.0 if llm_base_url else PRESETS[llm_provider].min_request_interval
 
+    # Run metadata, so a --json-out report records how it was produced (and can
+    # be compared against another run). Populated further by the pipeline
+    # (memories_scanned, candidate_pairs, judge_verdicts). No API keys ever.
+    import datetime as _datetime
+
+    from mem_audit import __version__ as _version
+
+    embed_model_used = embed_model or PRESETS[embed_provider].embed_model
+    judge_model_used = llm_model or PRESETS[llm_provider].judge_model
+    report_metadata: dict = {
+        "tool": "mem-audit",
+        "version": _version,
+        "run_at": _datetime.datetime.now(_datetime.timezone.utc).isoformat(),
+        "user_id": user_id,
+        "embedder": {
+            "provider": "custom" if embed_base_url else embed_provider,
+            "model": embed_model_used,
+            "base_url": embed_base_url or PRESETS[embed_provider].base_url,
+        },
+        "judge": {
+            "provider": "custom" if llm_base_url else llm_provider,
+            "model": judge_model_used,
+            "base_url": llm_base_url or PRESETS[llm_provider].base_url,
+        },
+        "params": {
+            "top_k": top_k,
+            "min_similarity": min_similarity,
+            "similarity_threshold": similarity_threshold,
+            "max_retries": max_retries,
+            "min_request_interval": min_request_interval,
+            "page_size": page_size,
+        },
+    }
+    run_line = (
+        f"embedder: {embed_model_used} · judge: {judge_model_used} · top-k: {top_k}"
+    )
+
     skipped_pairs = 0
 
     def on_skip(_pair) -> None:
@@ -247,6 +284,7 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
             min_request_interval=min_request_interval,
             partial_out=json_out,
             on_skip=on_skip,
+            report_metadata=report_metadata,
         )
     except RuntimeError as e:
         raise click.ClickException(str(e))
@@ -256,7 +294,7 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
         # credentials are already handled when the clients are built above.
         raise click.ClickException(str(e))
 
-    print_report(findings, total_memories=total, user_id=user_id)
+    print_report(findings, total_memories=total, user_id=user_id, run_line=run_line)
 
     if skipped_pairs:
         click.echo(
@@ -267,9 +305,9 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
 
     if json_out:
         # run_audit already flushed findings to json_out incrementally after
-        # every pair; this final write just guarantees the file exists even
-        # when there were zero candidate pairs (nothing to flush).
-        export_json(findings, json_out)
+        # every pair; this final write just guarantees the file exists (as the
+        # {metadata, findings} object) even when there were zero candidate pairs.
+        export_json(findings, json_out, metadata=report_metadata)
         click.echo(f"\nFindings written to {json_out}")
 
 

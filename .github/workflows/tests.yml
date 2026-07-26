@@ -38,3 +38,4 @@ jobs:
           PYTHONPATH=. python tests/test_report.py
           PYTHONPATH=. python tests/test_providers.py
           PYTHONPATH=. python tests/test_cli.py
+          PYTHONPATH=. python tests/test_confidence_analysis.py
