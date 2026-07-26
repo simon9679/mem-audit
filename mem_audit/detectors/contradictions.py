@@ -196,8 +196,8 @@ def openai_compatible_judge(
         resolved_key = api_key or os.environ.get(api_key_env)
         if not resolved_key:
             raise ValueError(
-                f"openai_compatible_judge requires an API key. Pass api_key= "
-                f"explicitly or set the {api_key_env} env var."
+                f"No API key found for the judge endpoint; expected it in "
+                f"the {api_key_env} environment variable."
             )
 
         import openai

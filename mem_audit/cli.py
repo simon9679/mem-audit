@@ -13,6 +13,33 @@ from mem_audit.providers import (
 from mem_audit.report import export_json, print_report
 
 
+def _expected_key_env(base_url: str | None, api_key_env: str | None, provider: str) -> str:
+    """The env var whose absence caused a missing-key error, for the chosen endpoint."""
+    if base_url:
+        return api_key_env or "OPENAI_API_KEY"
+    return api_key_env or PRESETS[provider].api_key_env
+
+
+def _no_key_message(role: str, expected_env: str, provider_flag: str,
+                    presets, base_url_flag: str, model_flag: str) -> str:
+    """
+    CLI-facing guidance for a missing endpoint key. Deliberately in command-line
+    terms (env var, flags) — never the library's function name or its Python
+    keyword arguments — and it lists the alternative endpoints from the preset
+    table so it can't
+    drift when a preset is added. It names the variable actually expected for the
+    chosen provider, which is not always OPENAI_API_KEY.
+    """
+    preset_list = " | ".join(presets)
+    return (
+        f"No API key found for the {role} endpoint. Do one of:\n"
+        f"  - set the {expected_env} environment variable; or\n"
+        f"  - choose a different {role} endpoint: {provider_flag} < {preset_list} >; or\n"
+        f"  - point at your own OpenAI-compatible endpoint: "
+        f"{base_url_flag} <url> {model_flag} <model>."
+    )
+
+
 @click.group()
 def main():
     """mem-audit: external consistency auditor for Mem0-based memory stores."""
@@ -100,12 +127,25 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
         llm_model: str | None,
         max_retries: int, min_request_interval: float | None, json_out: str | None):
     """Audit a single user's memory store for duplicates, contradictions, and staleness."""
-    # Build mem-audit's own embedder/judge clients FIRST — before touching mem0.
-    # These constructors validate the arguments eagerly (missing key, an
-    # escape-hatch base URL without a model, or a provider that can't serve the
-    # requested role all raise ValueError). Doing this before mem0 init means an
-    # argument mistake is reported as an argument mistake, not masked by mem0's
-    # own (later) initialization failure.
+    # Build mem-audit's own embedder/judge clients FIRST — before touching mem0 —
+    # so an argument mistake is reported as an argument mistake, not masked by
+    # mem0's own (later) initialization failure.
+    #
+    # Within that, validate the STRUCTURE of every argument before resolving any
+    # key: a base URL with no model is a mistake the user just made, whereas a
+    # missing key is ambient environment state, so the structural error wins —
+    # and it must point at whichever endpoint (embedder or judge) it's on.
+    if embed_base_url and not embed_model:
+        raise click.ClickException(
+            "--embed-base-url needs --embed-model too: with a custom base URL "
+            "there is no preset to supply a default embedding model."
+        )
+    if llm_base_url and not llm_model:
+        raise click.ClickException(
+            "--llm-base-url needs --llm-model too: with a custom base URL there "
+            "is no preset to supply a default judge model."
+        )
+
     try:
         embed_fn = resolve_embedder(
             embed_provider,
@@ -113,6 +153,15 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
             model=embed_model,
             api_key_env=embed_api_key_env,
         )
+    except ValueError:
+        # Structure is already validated above, so this is a missing key. Turn
+        # the library error into command-line guidance.
+        raise click.ClickException(_no_key_message(
+            "embedding", _expected_key_env(embed_base_url, embed_api_key_env, embed_provider),
+            "--embed-provider", EMBED_PRESETS, "--embed-base-url", "--embed-model",
+        ))
+
+    try:
         llm_call = resolve_judge(
             llm_provider,
             base_url=llm_base_url,
@@ -120,8 +169,11 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
             api_key_env=llm_api_key_env,
             max_retries=max_retries,
         )
-    except ValueError as e:
-        raise click.ClickException(str(e))
+    except ValueError:
+        raise click.ClickException(_no_key_message(
+            "judge", _expected_key_env(llm_base_url, llm_api_key_env, llm_provider),
+            "--llm-provider", JUDGE_PRESETS, "--llm-base-url", "--llm-model",
+        ))
 
     from mem0 import Memory  # imported lazily so `mem-audit --help` doesn't require mem0ai extras
 
