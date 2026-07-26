@@ -100,34 +100,12 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
         llm_model: str | None,
         max_retries: int, min_request_interval: float | None, json_out: str | None):
     """Audit a single user's memory store for duplicates, contradictions, and staleness."""
-    from mem0 import Memory  # imported lazily so `mem-audit --help` doesn't require mem0ai extras
-
-    def _init_client():
-        if config:
-            import json as _json
-
-            with open(config, "r", encoding="utf-8") as fh:
-                cfg = _json.load(fh)
-            return Memory.from_config(cfg)
-        return Memory()
-
-    try:
-        client = _init_client()
-    except Exception as e:  # noqa: BLE001 — surface mem0's own init failure as a clean CLI error
-        raise click.ClickException(
-            "Failed to initialize the mem0 client. This happens inside mem0, "
-            "before mem-audit does anything: mem0 builds its OWN embedder/LLM "
-            "from its default configuration, and mem-audit's --embed-provider / "
-            "--llm-provider flags do not affect that. The most common cause is a "
-            "missing OPENAI_API_KEY for mem0's default embedder. Fix it by passing "
-            "--config with a mem0 config JSON that uses a provider you have "
-            f"credentials for. Underlying error: {e}"
-        )
-
-    # Build mem-audit's own embedder/judge clients. These constructors validate
-    # credentials eagerly (missing key, escape-hatch base URL without a model,
-    # or a provider that can't serve the requested role all raise ValueError),
-    # so wrap them here to turn that into a clean ClickException.
+    # Build mem-audit's own embedder/judge clients FIRST — before touching mem0.
+    # These constructors validate the arguments eagerly (missing key, an
+    # escape-hatch base URL without a model, or a provider that can't serve the
+    # requested role all raise ValueError). Doing this before mem0 init means an
+    # argument mistake is reported as an argument mistake, not masked by mem0's
+    # own (later) initialization failure.
     try:
         embed_fn = resolve_embedder(
             embed_provider,
@@ -144,6 +122,41 @@ def run(user_id: str, config: str | None, top_k: int, min_similarity: float,
         )
     except ValueError as e:
         raise click.ClickException(str(e))
+
+    from mem0 import Memory  # imported lazily so `mem-audit --help` doesn't require mem0ai extras
+
+    # mem0 brings up its OWN embedder/LLM from its OWN config when the client is
+    # created; that is independent of the --embed-provider/--llm-provider flags
+    # resolved above. Wrap it so that failure is a clean CLI error, with a
+    # message tailored to whether a --config was supplied.
+    try:
+        if config:
+            import json as _json
+
+            with open(config, "r", encoding="utf-8") as fh:
+                cfg = _json.load(fh)
+            client = Memory.from_config(cfg)
+        else:
+            client = Memory()
+    except Exception as e:  # noqa: BLE001 — surface mem0's own init failure as a clean CLI error
+        if config:
+            raise click.ClickException(
+                f"mem0 read your config at '{config}' but could not initialize "
+                f"from it. mem0 builds its OWN embedder/LLM from that file, and "
+                f"failed to bring them up. Most likely the config is missing an "
+                f"'embedder'/'llm' section, or names a provider you don't have "
+                f"credentials for. (mem-audit's --embed-provider/--llm-provider do "
+                f"not affect mem0's own clients.) Underlying error: {e}"
+            )
+        raise click.ClickException(
+            "mem0 could not initialize its default client. This happens inside "
+            "mem0, before mem-audit runs: with no --config, mem0 builds its OWN "
+            "embedder/LLM from its default configuration, and mem-audit's "
+            "--embed-provider/--llm-provider flags do not affect that. The most "
+            "common cause is a missing OPENAI_API_KEY for mem0's default embedder. "
+            "Fix it by passing --config with a mem0 config JSON that uses a "
+            f"provider you have credentials for. Underlying error: {e}"
+        )
 
     # Default the inter-call throttle from the chosen judge preset (0 for the
     # escape-hatch path, which has no preset). An explicit value always wins.
