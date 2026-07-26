@@ -13,7 +13,7 @@ import numpy as np  # noqa: E402
 from mem_audit.embeddings import (  # noqa: E402
     _iter_batches,
     _make_token_counter,
-    openai_embedder,
+    openai_compatible_embedder,
 )
 
 
@@ -53,7 +53,9 @@ def test_large_input_is_split_by_item_ceiling_order_preserved():
     n = 5000
     texts = [f"marker-{i}" for i in range(n)]
     client = FakeClient()
-    embed = openai_embedder(client=client, max_batch_items=128, max_batch_tokens=250_000)
+    embed = openai_compatible_embedder(
+        model="text-embedding-3-small", client=client, max_batch_items=128, max_batch_tokens=250_000
+    )
 
     vectors = embed(texts)
 
@@ -72,7 +74,7 @@ def test_large_input_is_split_by_item_ceiling_order_preserved():
 
 def test_empty_input_returns_zero_matrix_without_calling_client():
     client = FakeClient()
-    embed = openai_embedder(client=client)
+    embed = openai_compatible_embedder(model="text-embedding-3-small", client=client)
     vectors = embed([])
     assert vectors.shape == (0, 1536)
     assert client.calls == []
@@ -80,7 +82,7 @@ def test_empty_input_returns_zero_matrix_without_calling_client():
 
 def test_single_text_one_call():
     client = FakeClient()
-    embed = openai_embedder(client=client)
+    embed = openai_compatible_embedder(model="text-embedding-3-small", client=client)
     vectors = embed(["marker-0"])
     assert len(client.calls) == 1
     assert vectors.shape == (1, 3)

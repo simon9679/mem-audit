@@ -162,70 +162,43 @@ def retry_on_rate_limit(
     return wrapped
 
 
-def default_llm_judge(
-    client=None, model: str = "gpt-4o-mini", max_retries: int = DEFAULT_MAX_RETRIES
+def openai_compatible_judge(
+    model: str,
+    base_url: str | None = None,
+    api_key: str | None = None,
+    api_key_env: str = "OPENAI_API_KEY",
+    max_retries: int = DEFAULT_MAX_RETRIES,
+    client=None,
 ) -> LLMCallFn:
-    """OpenAI-compatible default judge. Swap with any callable(prompt) -> str.
+    """
+    Returns a judge callable(prompt) -> str backed by any OpenAI-compatible
+    chat endpoint. Swap with any callable(prompt) -> str.
+
+    base_url=None uses the openai client library's default endpoint. The key is
+    taken from `api_key` if given, else read from the `api_key_env` environment
+    variable; a missing key raises ValueError naming that variable. The judge is
+    called once per candidate pair, so it is the volume-driving step in the
+    pipeline; for endpoints whose binding constraint is requests-per-minute, the
+    throughput limiter is min_request_interval plus 429 backoff (see
+    find_contradictions and retry_on_rate_limit), not a token budget.
 
     The returned callable already retries on HTTP 429 with backoff (see
-    retry_on_rate_limit); pass max_retries=0 to disable.
+    retry_on_rate_limit); pass max_retries=0 to disable. Pass `client` to inject
+    a pre-built OpenAI-compatible client (tests, or a custom transport); when
+    given, key resolution is skipped entirely.
     """
     if client is None:
+        import os
+
         import openai
 
-        client = openai.OpenAI()
-
-    def call(prompt: str) -> str:
-        resp = client.chat.completions.create(
-            model=model,
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.0,
-        )
-        # Defensive: a malformed/unexpected provider response (e.g. empty
-        # choices) would otherwise raise IndexError/AttributeError and
-        # crash the whole audit over one judge call. _safe_parse already
-        # treats unparseable text as UNRELATED — extend that same
-        # tolerance to a malformed response shape.
-        try:
-            return resp.choices[0].message.content or ""
-        except (IndexError, AttributeError):
-            return ""
-
-    return retry_on_rate_limit(call, max_retries=max_retries)
-
-
-def cerebras_llm_judge(
-    model: str = "gpt-oss-120b", api_key: str | None = None, max_retries: int = DEFAULT_MAX_RETRIES
-) -> LLMCallFn:
-    """
-    Judge backed by Cerebras' free OpenAI-compatible endpoint (no card).
-    Judging is the call made once *per candidate pair*, so it's the volume
-    driver in the pipeline. The real constraint on the free tier is requests-
-    per-minute (reported around 5-30 RPM across 2026), not the daily token
-    budget — so on a large store the throughput limiter is min_request_interval
-    plus 429 backoff (see find_contradictions and retry_on_rate_limit), not the
-    token allowance.
-
-    Cerebras' free-tier model catalog has changed more than once in 2026
-    (reports as recent as May 2026 show it narrowed to just two models at
-    one point) — don't trust this default blindly. Check your account's
-    available models (client.models.list() or the Cerebras dashboard)
-    before relying on `model` staying valid.
-
-    api_key defaults to the CEREBRAS_API_KEY env var if not passed explicitly.
-    """
-    import os
-
-    import openai
-
-    resolved_key = api_key or os.environ.get("CEREBRAS_API_KEY")
-    if not resolved_key:
-        raise ValueError(
-            "cerebras_llm_judge requires an API key — pass api_key= "
-            "explicitly or set the CEREBRAS_API_KEY env var."
-        )
-
-    client = openai.OpenAI(base_url="https://api.cerebras.ai/v1", api_key=resolved_key)
+        resolved_key = api_key or os.environ.get(api_key_env)
+        if not resolved_key:
+            raise ValueError(
+                f"openai_compatible_judge requires an API key — pass api_key= "
+                f"explicitly or set the {api_key_env} env var."
+            )
+        client = openai.OpenAI(base_url=base_url, api_key=resolved_key)
 
     def call(prompt: str) -> str:
         resp = client.chat.completions.create(
@@ -436,8 +409,8 @@ def find_contradictions(
     behave exactly as before:
 
     - min_request_interval: seconds to sleep before every call except the
-      first. A soft throttle for RPM-limited free tiers (e.g. ~12s for a 5-RPM
-      Cerebras free tier). 0.0 means no delay at all.
+      first. A soft throttle for endpoints that limit request frequency. 0.0
+      means no delay at all.
     - partial_out: if set, the full findings list is re-written to this path
       (atomically) after every pair, so an interrupted run still leaves a valid
       partial report. cli.py points this at --json-out.

@@ -15,21 +15,16 @@ import numpy as np
 
 EmbedFn = Callable[[Sequence[str]], np.ndarray]
 
-# Provider-specific batching defaults. A single embeddings.create() over an
+# Default per-request batch ceilings. A single embeddings.create() over an
 # entire memory store blows past real per-request limits — this is not
-# hypothetical:
-#   - OpenAI: max 8192 tokens per input, max 2048 array elements, and a hard
-#     ~300k-token ceiling across the whole request (HTTP 400
-#     "max_tokens_per_request" beyond it). We keep items well under 2048 and
-#     tokens under 300k with headroom.
-#   - GitHub Models: ~8K tokens per request — tighter still, so a much smaller
-#     token budget and item cap.
-# These are conservative on purpose (below the documented ceilings) so a batch
-# never lands exactly on a limit.
+# hypothetical: OpenAI enforces max 8192 tokens per input, max 2048 array
+# elements, and a hard ~300k-token ceiling across the whole request (HTTP 400
+# "max_tokens_per_request" beyond it). These defaults keep items well under 2048
+# and tokens under 300k with headroom, so a batch never lands exactly on a
+# limit. Endpoints with tighter per-request budgets (e.g. GitHub Models, ~8K
+# tokens/request) carry their own smaller values in providers.py.
 _OPENAI_MAX_BATCH_TOKENS = 250_000
 _OPENAI_MAX_BATCH_ITEMS = 128
-_GITHUB_MAX_BATCH_TOKENS = 6_000
-_GITHUB_MAX_BATCH_ITEMS = 64
 
 
 TokenCounter = Callable[[str], int]
@@ -120,66 +115,41 @@ def _embed_in_batches(
     return np.vstack(chunks)
 
 
-def openai_embedder(
-    model: str = "text-embedding-3-small",
-    client=None,
+def openai_compatible_embedder(
+    model: str,
+    base_url: str | None = None,
+    api_key: str | None = None,
+    api_key_env: str = "OPENAI_API_KEY",
     max_batch_tokens: int = _OPENAI_MAX_BATCH_TOKENS,
     max_batch_items: int = _OPENAI_MAX_BATCH_ITEMS,
+    client=None,
 ) -> EmbedFn:
-    """Returns an embed_fn backed by an OpenAI-compatible client.
+    """
+    Returns an embed_fn backed by any OpenAI-compatible embeddings endpoint.
 
-    Texts are embedded in batches sized to stay under OpenAI's per-request
-    limits (see the module-level constants); results are stacked back in
-    input order.
+    base_url=None uses the openai client library's default endpoint. The key is
+    taken from `api_key` if given, else read from the `api_key_env` environment
+    variable; a missing key raises ValueError naming that variable (rather than
+    a later, more cryptic failure). Texts are embedded in batches sized to stay
+    under the endpoint's per-request limits (max_batch_tokens / max_batch_items),
+    and results are stacked back in input order.
+
+    Pass `client` to inject a pre-built OpenAI-compatible client (tests, or a
+    custom transport); when given, key resolution is skipped entirely.
     """
     if client is None:
+        import os
+
         import openai
 
-        client = openai.OpenAI()
+        resolved_key = api_key or os.environ.get(api_key_env)
+        if not resolved_key:
+            raise ValueError(
+                f"openai_compatible_embedder requires an API key — pass api_key= "
+                f"explicitly or set the {api_key_env} env var."
+            )
+        client = openai.OpenAI(base_url=base_url, api_key=resolved_key)
 
-    count_tokens = _make_token_counter(model)
-
-    def embed(texts: Sequence[str]) -> np.ndarray:
-        return _embed_in_batches(
-            client, model, texts, count_tokens, max_batch_items, max_batch_tokens
-        )
-
-    return embed
-
-
-def github_models_embedder(
-    model: str = "openai/text-embedding-3-small",
-    token: str | None = None,
-    max_batch_tokens: int = _GITHUB_MAX_BATCH_TOKENS,
-    max_batch_items: int = _GITHUB_MAX_BATCH_ITEMS,
-) -> EmbedFn:
-    """
-    Embed_fn backed by GitHub Models' free OpenAI-compatible endpoint.
-
-    Verified endpoint shape (docs.github.com/en/rest/models/embeddings,
-    checked against current docs): base_url models.github.ai/inference,
-    Bearer auth with a PAT that has `models: read`, model id prefixed with
-    the provider ("openai/text-embedding-3-small"). This is a *free but
-    rate-limited* route with a tight ~8K-token-per-request limit, so texts
-    are embedded in small batches (see the module-level GitHub constants)
-    rather than a single call — one call over a whole store would exceed the
-    per-request quota on even a few dozen facts.
-
-    token defaults to the GITHUB_TOKEN env var if not passed explicitly.
-    """
-    import os
-
-    import openai
-
-    resolved_token = token or os.environ.get("GITHUB_TOKEN")
-    if not resolved_token:
-        raise ValueError(
-            "github_models_embedder requires a GitHub token — pass token= "
-            "explicitly or set the GITHUB_TOKEN env var. The token needs "
-            "the 'models: read' permission."
-        )
-
-    client = openai.OpenAI(base_url="https://models.github.ai/inference", api_key=resolved_token)
     count_tokens = _make_token_counter(model)
 
     def embed(texts: Sequence[str]) -> np.ndarray:

@@ -2,8 +2,7 @@ import os
 
 from mem0 import Memory
 
-from mem_audit.embeddings import github_models_embedder
-from mem_audit.detectors.contradictions import cerebras_llm_judge
+from mem_audit.providers import embedder_from_preset, judge_from_preset
 from mem_audit.pipeline import run_audit
 from mem_audit.report import print_report
 
@@ -41,8 +40,8 @@ client.add("My name is LGY", user_id="smoketest", infer=False)
 client.add("My name is LGS", user_id="smoketest", infer=False)
 client.add("I live in Berlin", user_id="smoketest", infer=False)
 
-embed_fn = github_models_embedder(token=GITHUB_TOKEN)
-llm_call = cerebras_llm_judge(api_key=CEREBRAS_API_KEY)
+embed_fn = embedder_from_preset("github", api_key=GITHUB_TOKEN)
+llm_call = judge_from_preset("cerebras", api_key=CEREBRAS_API_KEY)
 
 # top-k instead of a fixed threshold now — no magic number to guess.
 findings, total = run_audit(

@@ -36,3 +36,4 @@ jobs:
           PYTHONPATH=. python tests/test_judge_prompt.py
           PYTHONPATH=. python tests/test_connector_pagesize.py
           PYTHONPATH=. python tests/test_report.py
+          PYTHONPATH=. python tests/test_providers.py
