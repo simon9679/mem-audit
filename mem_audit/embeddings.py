@@ -140,14 +140,18 @@ def openai_compatible_embedder(
     if client is None:
         import os
 
-        import openai
-
+        # Resolve/validate the key BEFORE importing openai: a missing-key error
+        # ("set the X env var") is self-contained and must not depend on the
+        # optional openai package being installed (CI runs without it).
         resolved_key = api_key or os.environ.get(api_key_env)
         if not resolved_key:
             raise ValueError(
                 f"openai_compatible_embedder requires an API key — pass api_key= "
                 f"explicitly or set the {api_key_env} env var."
             )
+
+        import openai
+
         client = openai.OpenAI(base_url=base_url, api_key=resolved_key)
 
     count_tokens = _make_token_counter(model)
