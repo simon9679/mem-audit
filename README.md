@@ -89,7 +89,44 @@ two separate embedder/LLM setups, and they do not share flags.**
    "Choosing embedding and judge endpoints" below.
 
 Point mem-audit at a mem0 config you can actually bring up, with `--config`.
-A minimal one, with **no keys in the file** (keys are read from the environment):
+You don't need an OpenAI account for this — mem0's `openai` provider is just an
+OpenAI-*compatible* client, and `openai_base_url` decides where it actually
+goes. Here it points mem0's own embedder and LLM at GitHub Models'
+OpenAI-compatible endpoint (needs a `models: read` token). **No keys in the
+file** — mem0 reads the key from the
+`OPENAI_API_KEY` environment variable, so for this endpoint you set
+`OPENAI_API_KEY` to your GitHub token:
+
+```json
+{
+  "vector_store": {
+    "provider": "qdrant",
+    "config": { "path": "./mem0_qdrant_db", "collection_name": "mem_audit" }
+  },
+  "embedder": {
+    "provider": "openai",
+    "config": {
+      "model": "openai/text-embedding-3-small",
+      "openai_base_url": "https://models.github.ai/inference"
+    }
+  },
+  "llm": {
+    "provider": "openai",
+    "config": {
+      "model": "openai/gpt-4o-mini",
+      "openai_base_url": "https://models.github.ai/inference"
+    }
+  }
+}
+```
+
+> mem0 sends anonymous usage telemetry to PostHog on startup. On a network
+> where that host is blocked, that surfaces as a wall of tracebacks around the
+> report — harmless, but it looks like mem-audit broke. Set `MEM0_TELEMETRY=False`
+> to turn it off.
+
+If you *do* have an OpenAI account, the config is the same shape without the
+`openai_base_url` lines (and `OPENAI_API_KEY` then holds a real OpenAI key):
 
 ```json
 {
