@@ -182,7 +182,45 @@ def test_mismatched_embedding_count_raises_clear_error():
     assert raised, "expected ValueError on embedding count mismatch"
 
 
+def test_clip_leaves_short_text_untouched():
+    """Text within the limit is returned verbatim, with no ellipsis."""
+    from mem_audit.detectors.contradictions import _clip
+
+    short = "I live in Berlin"
+    assert _clip(short, limit=60) == short
+    assert "…" not in _clip(short, limit=60)
+
+
+def test_clip_breaks_long_text_on_a_word_boundary():
+    """Long text is trimmed back to the last whole word, plus an ellipsis."""
+    from mem_audit.detectors.contradictions import _clip
+
+    text = "My commute eats up close to an hour, one direction, every single day"
+    out = _clip(text, limit=40)
+    assert out.endswith("…")
+    body = out[:-1]
+    # Never longer than the limit, and never cut mid-word (the char right
+    # after the kept prefix in the original was a space).
+    assert len(body) <= 40
+    assert text.startswith(body)
+    assert text[len(body)] == " "
+
+
+def test_clip_handles_text_with_no_spaces():
+    """A long unbroken token (e.g. a URL) must not break the helper or return empty."""
+    from mem_audit.detectors.contradictions import _clip
+
+    url = "https://example.com/" + "a" * 200
+    out = _clip(url, limit=60)
+    assert out.endswith("…")
+    assert out[:-1] == url[:60]
+    assert len(out[:-1]) == 60
+
+
 if __name__ == "__main__":
     test_naive_aware_datetime_mix_does_not_crash()
     test_mismatched_embedding_count_raises_clear_error()
+    test_clip_leaves_short_text_untouched()
+    test_clip_breaks_long_text_on_a_word_boundary()
+    test_clip_handles_text_with_no_spaces()
     print("Additional regression tests passed.")

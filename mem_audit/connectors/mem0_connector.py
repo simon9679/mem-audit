@@ -23,6 +23,16 @@ from typing import Any, Optional
 # default cap?" tripwire, never to bound the read itself.
 _MEM0_LEGACY_DEFAULT_LIMIT = 100
 
+# Circuit breakers for the cursor-based (Platform) pagination loop. It exits
+# normally when `next` goes falsy; these bound the damage if a stuck/broken API
+# keeps returning a truthy `next` forever, which would otherwise be an
+# unbounded stream of requests to a paid service. Two independent ceilings —
+# one on pages followed, one on total records accumulated — so neither a
+# never-ending cursor nor a client returning huge pages can run away. Both are
+# far above any realistic personal memory store.
+_MAX_PAGES = 1_000
+_MAX_RECORDS = 1_000_000
+
 
 @dataclass
 class MemoryRecord:
@@ -102,7 +112,32 @@ class Mem0Connector:
             records.extend(self._normalize(item) for item in results)
             if not isinstance(raw, dict) or not raw.get("next"):
                 break
+            # Circuit breakers: a broken/looping API that always reports a
+            # truthy `next` would page forever, hammering a paid service. Refuse
+            # loudly rather than warn — an audit that never terminates is worse
+            # than no audit.
+            if len(records) >= _MAX_RECORDS:
+                raise RuntimeError(
+                    f"fetch_all accumulated {len(records)} records for "
+                    f"user_id={user_id!r} and the paginated client is still "
+                    f"reporting more (non-null 'next'), past the {_MAX_RECORDS} "
+                    f"record safety ceiling. This is almost certainly a broken or "
+                    f"looping API response rather than a genuinely enormous store. "
+                    f"Aborting rather than issuing unbounded requests — if the "
+                    f"store really is this large, mem-audit is the wrong tool for "
+                    f"it (it is O(n^2); see the README scope note)."
+                )
             page += 1
+            if page > _MAX_PAGES:
+                raise RuntimeError(
+                    f"fetch_all followed more than {_MAX_PAGES} pages for "
+                    f"user_id={user_id!r} (page_size={page_size}) without the "
+                    f"cursor terminating. The paginated client kept returning a "
+                    f"non-null 'next' — almost certainly a broken or looping API "
+                    f"response rather than a genuinely huge store. Aborting rather "
+                    f"than issuing unbounded requests; re-check the client/endpoint "
+                    f"if you believe this user really has that many memories."
+                )
         return records
 
     def _fetch_all_single_page(self, user_id: str, page_size: int) -> list[MemoryRecord]:
@@ -157,16 +192,6 @@ class Mem0Connector:
                 f"<{_MEM0_LEGACY_DEFAULT_LIMIT} memories."
             )
         return records
-
-    def fetch_history(self, memory_id: str) -> list[dict[str, Any]]:
-        """Fetch the change history for a single memory (used by staleness detector)."""
-        try:
-            return self._client.history(memory_id=memory_id)
-        except Exception:
-            # Some backends/config combos don't have history tracking enabled.
-            # Callers should treat an empty list as "no history available",
-            # not "this memory was never touched".
-            return []
 
     @staticmethod
     def _normalize(item: dict[str, Any]) -> MemoryRecord:
