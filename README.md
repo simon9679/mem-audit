@@ -21,8 +21,7 @@ to Mem0 by design, not a workaround for something they're about to fix.
 It connects to your existing Mem0 instance through the standard SDK
 (`get_all`), reports what it finds, and stops. You decide what to fix and how.
 (Staleness here means "a newer memory likely supersedes an older one," judged
-from the two facts themselves — not from Mem0's per-memory `history`, which the
-connector can read but the audit pipeline doesn't use yet.)
+from the two facts themselves — not from Mem0's per-memory `history`.)
 
 ## What it catches
 
@@ -38,6 +37,13 @@ connector can read but the audit pipeline doesn't use yet.)
 - Does not require switching vector store backends — works with whatever
   Mem0 is already configured to use (Qdrant, pgvector, Chroma, ...),
   because it talks to Mem0's client API, not the backend directly.
+- Does not paginate a self-hosted `mem0.Memory`. That client's `get_all()` has
+  no cursor, so mem-audit fetches up to `--page-size` records (default 500) and
+  **aborts rather than silently auditing a partial store** if it gets back
+  exactly that many — it can't tell a full store from a truncated page. The
+  practical ceiling for one run on self-hosted `Memory` is therefore
+  `page_size - 1`; raise `--page-size` once you know roughly how many memories
+  the user has. (The hosted `MemoryClient` paginates normally.)
 - Does not attempt persona-drift detection for coding agents — for that,
   see [Nautilus Compass](https://github.com/chunxiaoxx/nautilus-compass),
   which solves a related but different problem for coding-agent sessions.
@@ -56,68 +62,7 @@ required, and CI/offline runs work without it:
 pip install -e ".[precise]"
 ```
 
-## Usage
-
-```bash
-mem-audit run --user-id alice
-```
-
-> If `mem-audit` isn't found after install (common on Windows, where pip puts
-> the console script in a `Scripts` directory that isn't always on your `PATH`),
-> run the exact same CLI as a module instead:
->
-> ```bash
-> python -m mem_audit run --user-id alice
-> ```
-
-Uses your existing `mem0` config/env vars by default. To point at a specific
-config:
-
-```bash
-mem-audit run --user-id alice --config ./mem0_config.json --json-out report.json
-```
-
-### Running without paid API keys
-
-By default `mem-audit` uses OpenAI directly for both embeddings and the
-LLM judge. If you don't have (or don't want to spend) an OpenAI budget,
-two free-tier providers are wired in:
-
-```bash
-export GITHUB_TOKEN=...       # needs 'models: read' — https://github.com/settings/tokens
-export CEREBRAS_API_KEY=...   # free, no card — https://cloud.cerebras.ai/
-
-mem-audit run --user-id alice --embed-provider github --llm-provider cerebras
-```
-
-This split is deliberate. Embeddings are the cheap pass: the memory texts are
-sent in small, token-bounded batches (GitHub Models caps a single request at
-roughly 8K tokens, so one call over a whole store would fail — mem-audit
-chunks under that limit and stitches the vectors back in order). The judge is
-the volume driver — one call *per candidate pair* — so it's where rate limits
-actually bite.
-
-The binding constraint on these free tiers is **requests per minute**, not the
-daily token budget. Cerebras' free tier has been reported at roughly 5–30 RPM
-across 2026, and GitHub Models returns a `retry-after` on 429 that can be tens
-of thousands of seconds (a daily quota). mem-audit handles both:
-
-- `--max-retries N` (default 5) — retries a 429'd judge call with backoff,
-  honoring a `retry-after` header when present, else exponential
-  (2/4/8/16/32s). A pair that still fails is skipped, not fatal, and reported
-  in a `N pair(s) skipped due to rate limits` summary.
-- `--min-request-interval S` — sleeps `S` seconds between judge calls to stay
-  under an RPM cap. Defaults to `0` for OpenAI and auto-sets to `12.0` for
-  `--llm-provider=cerebras` (matching a ~5 RPM tier) unless you pass a value.
-
-Because `--json-out` is written incrementally (atomically, after each pair), a
-run interrupted partway through still leaves a valid partial report on disk.
-
-Cerebras' free-model catalog has changed more than once in 2026 — if the
-default (`gpt-oss-120b`) isn't in your account, pass `--llm-model <name>`
-with whatever's currently available.
-
-## Try it without any API keys
+## Try it first — offline, no keys, no network
 
 ```bash
 python examples/demo_offline.py
@@ -125,7 +70,118 @@ python examples/demo_offline.py
 
 Runs the full pipeline against a synthetic memory store that reproduces the
 `#4896` scenario, using fake embeddings and a canned LLM judge — no network
-calls. Good for seeing the tool's behavior before wiring up real credentials.
+calls, no API keys. This is the fastest way to see what the tool does before
+wiring up anything real.
+
+## A real run needs two independent configurations
+
+This trips up almost everyone on the first real run, so up front: **there are
+two separate embedder/LLM setups, and they do not share flags.**
+
+1. **mem0 has its own embedder and LLM.** When mem-audit creates the mem0
+   client (`Memory()` or `Memory.from_config(...)`), mem0 brings up *its own*
+   embedder and LLM from *its own* config. mem-audit's `--embed-provider` /
+   `--llm-provider` flags **do not affect this at all.** With no config, mem0's
+   default embedder needs `OPENAI_API_KEY`, and the run stops there if it's
+   missing.
+2. **mem-audit has its own embedder and judge.** These are what actually run
+   the audit, and they're controlled by the flags described under
+   "Choosing embedding and judge endpoints" below.
+
+Point mem-audit at a mem0 config you can actually bring up, with `--config`.
+A minimal one, with **no keys in the file** (keys are read from the environment):
+
+```json
+{
+  "vector_store": {
+    "provider": "qdrant",
+    "config": { "path": "./mem0_qdrant_db", "collection_name": "mem_audit" }
+  },
+  "embedder": { "provider": "openai", "config": { "model": "text-embedding-3-small" } },
+  "llm": { "provider": "openai", "config": { "model": "gpt-4o-mini" } }
+}
+```
+
+## Choosing embedding and judge endpoints
+
+mem-audit's own embedder and judge talk to any OpenAI-compatible endpoint.
+Named presets are shortcuts for known endpoints — a base URL, which environment
+variable holds the key, and default model ids:
+
+| preset | role(s) | key env var | default model(s) |
+| --- | --- | --- | --- |
+| `openai` | embeddings + judge | `OPENAI_API_KEY` | `text-embedding-3-small` (embed), `gpt-4o-mini` (judge) |
+| `github` | embeddings | `GITHUB_TOKEN` (needs `models: read`) | `openai/text-embedding-3-small` |
+| `cerebras` | judge | `CEREBRAS_API_KEY` | `gpt-oss-120b` |
+
+```bash
+mem-audit run --user-id alice --config ./mem0_config.json \
+  --embed-provider github --llm-provider cerebras
+```
+
+For any endpoint not in that table, generic flags take over. **An explicit flag
+overrides the preset**, and an explicit `--embed-base-url` / `--llm-base-url`
+**ignores the preset entirely and then requires an explicit model:**
+
+- Embedder: `--embed-provider`, `--embed-base-url`, `--embed-model`, `--embed-api-key-env`
+- Judge: `--llm-provider`, `--llm-base-url`, `--llm-model`, `--llm-api-key-env`
+
+```bash
+# fully custom OpenAI-compatible endpoints, no preset involved:
+mem-audit run --user-id alice --config ./mem0_config.json \
+  --embed-base-url https://my-host/v1 --embed-model my-embed-model --embed-api-key-env MY_KEY \
+  --llm-base-url   https://my-host/v1 --llm-model   my-judge-model  --llm-api-key-env MY_KEY
+```
+
+Some endpoints limit how many requests you can make per minute rather than a
+token budget; a preset carries a conservative `--min-request-interval` default
+for those, which you can raise or lower (`0` disables the wait between judge
+calls). A preset's default model can also disappear from your account over
+time — if so, pass `--embed-model` / `--llm-model` with whatever the endpoint
+currently offers.
+
+Keys are read from environment variables, never passed as flags — see
+[`.env.example`](.env.example):
+
+```
+OPENAI_API_KEY=      # openai preset (embeddings and/or judge)
+GITHUB_TOKEN=        # github preset (embeddings); needs the 'models: read' permission
+CEREBRAS_API_KEY=    # cerebras preset (judge)
+```
+
+## What a run costs you (in calls, not dollars)
+
+Two passes, with very different call counts:
+
+- **Embeddings** — one pass over every memory text, split into batches that fit
+  the endpoint's per-request limit. Roughly one request per batch.
+- **Judge** — one LLM call *per candidate pair*, and this is the volume driver.
+
+The number of candidate pairs is bounded by `N × k / 2` after de-duplication,
+where `N` is the number of memories and `k` is `--top-k` (default 5): each
+memory contributes its `k` nearest neighbors, and each shared pair is counted
+once. So a 200-memory store at the default `k=5` is **up to ~500 judge calls.**
+
+`--top-k` sets that ceiling directly; `--min-request-interval` sets the pace
+between calls. Lower either to make fewer, or slower, calls.
+
+## Run it
+
+```bash
+mem-audit run --user-id alice --config ./mem0_config.json --json-out report.json
+```
+
+With no `--config`, mem-audit uses mem0's own default config / env vars for the
+mem0 client (see "A real run needs two independent configurations" — mem0's
+default embedder needs `OPENAI_API_KEY`).
+
+> If `mem-audit` isn't found after install (common on Windows, where pip puts
+> the console script in a `Scripts` directory that isn't always on your `PATH`),
+> run the exact same CLI as a module instead:
+>
+> ```bash
+> python -m mem_audit run --user-id alice --config ./mem0_config.json
+> ```
 
 ## How it works
 
@@ -149,7 +205,8 @@ calls. Good for seeing the tool's behavior before wiring up real credentials.
    backoff (`--max-retries`), calls can be throttled (`--min-request-interval`),
    and `--json-out` is flushed after every pair so an interrupted run still
    leaves a valid report.
-4. `report.py` — prints a severity-sorted table. `--json-out` for CI use.
+4. `report.py` — prints a table sorted by severity, highest first (contradictions
+   on top). `--json-out` for CI use.
 
 ## Measured accuracy
 
@@ -187,17 +244,13 @@ close they are to what this does:
 
 - [mem0ai/mem0#5850](https://github.com/mem0ai/mem0/issues/5850) — an
   open, in-progress proposal for built-in compaction inside Mem0 itself
-  (merge-first, evict-fallback). If/when this lands, it may cover part of
-  what `mem-audit` catches — natively, write-time, and with automatic
-  merging rather than a human-reviewed report.
+  (a `max_memories` threshold with merge-first, evict-fallback consolidation).
+  If/when this lands, it may cover part of what `mem-audit` catches — natively,
+  write-time, and with automatic merging rather than a human-reviewed report.
 - [mem0ai/mem0-lifecycle](https://github.com/HH1162/mem0-lifecycle) —
   a third-party plugin that decays unused memories over time
   (Ebbinghaus-curve based), a different axis (staleness-by-neglect) than
   duplicate/contradiction detection.
-- A write-time "DedupMemory" wrapper shared in
-  [mem0ai/mem0#5352](https://github.com/mem0ai/mem0/issues/5352#issuecomment)
-  by a community member — intercepts at `add()` time rather than
-  auditing after the fact.
 - [TeleMem](https://github.com/TeleAI-UAGI/telemem) — a full drop-in
   replacement for Mem0 with built-in semantic deduplication, rather than
   an external tool you point at an existing store.
@@ -220,4 +273,4 @@ is more useful right now than feature requests.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).

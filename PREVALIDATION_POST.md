@@ -8,7 +8,7 @@ I don't want to migrate to a different memory framework just for this — I'm
 happy with Mem0 otherwise (cost, simplicity, backend flexibility).
 
 So I built a small external tool that:
-- reads your existing memories through the standard SDK (get_all/history) —
+- reads your existing memories through the standard SDK (get_all) —
   doesn't touch your vector store directly, works with whatever backend
   you've got (Qdrant/pgvector/etc.)
 - does a cheap embedding pass to find near-duplicate pairs, then an
