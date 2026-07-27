@@ -140,6 +140,67 @@ def test_partial_out_written_after_each_pair(tmp_path=None):
     assert {tuple(item["memory_ids"]) for item in data} == {("a1", "a2"), ("b1", "b2")}
 
 
+def test_report_metadata_tracks_verdicts_and_writes_object():
+    import json as _json
+    import os
+    import tempfile
+
+    out = os.path.join(tempfile.mkdtemp(), "partial.json")
+    meta = {"tool": "mem-audit"}
+
+    def judge(prompt):
+        # The near-miss pair's text is "unrel"; the judge calls it UNRELATED
+        # (which yields no Finding). The other pair is a DUPLICATE.
+        if "unrel" in prompt:
+            return '{"label": "UNRELATED", "rationale": "false positive"}'
+        return '{"label": "DUPLICATE", "rationale": "same"}'
+
+    pairs = [_pair("a", "b"), _pair("c", "d", text_a="unrel", text_b="unrel")]
+    findings = find_contradictions(pairs, judge, partial_out=out, report_metadata=meta)
+
+    # Verdict tally covers all four labels + skipped, counted per judged pair.
+    assert meta["judge_verdicts"] == {
+        "DUPLICATE": 1, "CONTRADICTION": 0, "UPDATE": 0, "UNRELATED": 1, "skipped": 0
+    }
+    assert len(findings) == 1  # UNRELATED produced no Finding
+
+    # The partial file is the self-describing object, valid JSON, no keys.
+    with open(out, encoding="utf-8") as fh:
+        data = _json.load(fh)
+    assert isinstance(data, dict)
+    assert data["metadata"]["judge_verdicts"]["UNRELATED"] == 1
+    assert len(data["findings"]) == 1
+
+
+def test_interrupted_run_leaves_valid_metadata_object():
+    import json as _json
+    import os
+    import tempfile
+
+    out = os.path.join(tempfile.mkdtemp(), "partial.json")
+    meta = {"tool": "mem-audit"}
+    good = '{"label": "DUPLICATE", "rationale": "same"}'
+
+    def judge(prompt):
+        if "boom" in prompt:
+            raise KeyboardInterrupt("simulated Ctrl-C")
+        return good
+
+    pairs = [_pair("a1", "a2"), _pair("b1", "b2"), _pair("c1", "c2", text_a="boom", text_b="boom")]
+    raised = False
+    try:
+        find_contradictions(pairs, judge, partial_out=out, report_metadata=meta)
+    except KeyboardInterrupt:
+        raised = True
+    assert raised
+
+    with open(out, encoding="utf-8") as fh:
+        data = _json.load(fh)  # must be valid despite the interrupt
+    assert isinstance(data, dict)
+    assert len(data["findings"]) == 2  # two pairs completed before the interrupt
+    assert data["metadata"]["judge_verdicts"]["DUPLICATE"] == 2
+
+
 def test_min_request_interval_zero_adds_no_sleep():
     slept = []
     good = '{"label": "UNRELATED", "rationale": "no"}'
@@ -166,6 +227,8 @@ if __name__ == "__main__":
     test_retry_after_header_is_honored()
     test_exhausted_retries_skip_pair_and_continue()
     test_partial_out_written_after_each_pair()
+    test_report_metadata_tracks_verdicts_and_writes_object()
+    test_interrupted_run_leaves_valid_metadata_object()
     test_min_request_interval_zero_adds_no_sleep()
     test_min_request_interval_sleeps_between_calls_only()
     print("Resilience tests passed.")

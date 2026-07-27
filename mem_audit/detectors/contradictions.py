@@ -364,17 +364,22 @@ def _finding_for(result: JudgeResult, a: MemoryRecord, b: MemoryRecord) -> Optio
     return None
 
 
-def _write_findings_atomic(findings: list[Finding], path: str) -> None:
+def _write_findings_atomic(findings: list[Finding], path: str, metadata: dict | None = None) -> None:
     """
-    Rewrite `path` with the full current findings list, atomically.
+    Rewrite `path` with the full current report, atomically.
 
     We write a temp file in the same directory and os.replace() it over the
     target, so a process killed mid-write never leaves a half-written or empty
     report — the file is always either the previous complete version or the
     new complete version. This is the whole point of the incremental flush: a
     run interrupted at 60% still leaves a valid partial report on disk.
+
+    With `metadata`, the on-disk shape is the object {"metadata": ...,
+    "findings": [...]} — matching report.export_json — so an interrupted run
+    still yields a self-describing report. Without it, a bare findings list.
     """
-    payload = [finding_to_dict(f) for f in findings]
+    findings_data = [finding_to_dict(f) for f in findings]
+    payload = {"metadata": metadata, "findings": findings_data} if metadata is not None else findings_data
     directory = os.path.dirname(os.path.abspath(path)) or "."
     fd, tmp_path = tempfile.mkstemp(dir=directory, suffix=".tmp")
     try:
@@ -398,6 +403,7 @@ def find_contradictions(
     on_finding: Callable[[Finding], None] | None = None,
     on_skip: Callable[["CandidatePair"], None] | None = None,
     sleep: Callable[[float], None] = time.sleep,
+    report_metadata: dict | None = None,
 ) -> list[Finding]:
     """
     Takes candidate pairs from duplicates.find_duplicate_candidates and
@@ -425,9 +431,25 @@ def find_contradictions(
       fatal — an audit over 90% of the data beats a traceback at 60%. The judge
       factories already retry with backoff; if the call *still* raises a rate-
       limit error here, the retries are exhausted and we move on.
+    - report_metadata: if given, its "judge_verdicts" key is populated (and kept
+      current) with the tally of judge labels — DUPLICATE / CONTRADICTION /
+      UPDATE / UNRELATED, plus "skipped" for pairs abandoned to rate limits —
+      and the incremental partial_out file is written as the self-describing
+      {"metadata": ..., "findings": [...]} object rather than a bare list.
     """
     findings: list[Finding] = []
     total = len(candidate_pairs)
+
+    # Verdict tally across all four judge labels plus rate-limit skips. Shared by
+    # reference into report_metadata so the partial file reflects it live.
+    verdicts = {"DUPLICATE": 0, "CONTRADICTION": 0, "UPDATE": 0, "UNRELATED": 0, "skipped": 0}
+    if report_metadata is not None:
+        report_metadata["judge_verdicts"] = verdicts
+
+    def _flush() -> None:
+        if partial_out is not None:
+            _write_findings_atomic(findings, partial_out, metadata=report_metadata)
+
     for done, pair in enumerate(candidate_pairs, start=1):
         if done > 1 and min_request_interval > 0:
             sleep(min_request_interval)
@@ -445,13 +467,15 @@ def find_contradictions(
                 f"past retry budget: {exc}",
                 file=sys.stderr,
             )
+            verdicts["skipped"] += 1
             if on_skip:
                 on_skip(pair)
             if on_progress:
                 on_progress(done, total)
-            if partial_out is not None:
-                _write_findings_atomic(findings, partial_out)
+            _flush()
             continue
+
+        verdicts[result.label] = verdicts.get(result.label, 0) + 1
 
         if on_progress:
             on_progress(done, total)
@@ -462,8 +486,7 @@ def find_contradictions(
             if on_finding:
                 on_finding(finding)
 
-        if partial_out is not None:
-            _write_findings_atomic(findings, partial_out)
+        _flush()
 
     return findings
 

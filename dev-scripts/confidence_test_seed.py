@@ -1,7 +1,7 @@
 """
 Confidence test: seeds a larger, harder, more realistic memory store with
 KNOWN ground truth, so after running the real CLI we can compute actual
-precision/recall — not just "it didn't crash".
+precision/recall mechanically — not by eyeballing paraphrased summaries.
 
 Includes deliberately tricky cases:
 - paraphrased duplicates (not just template swaps)
@@ -9,14 +9,23 @@ Includes deliberately tricky cases:
   (tests false positive rate, the harder direction to get right)
 - multiple unrelated facts as noise
 
-Run this once, then run the real CLI against it (instructions printed at
-the end), then run analyze_confidence_test.py against report.json.
+Because Mem0 assigns its own UUIDs, this script captures the id it gets back for
+each seeded fact and writes a ground-truth map (pair name -> the two Mem0 ids,
+plus the expected finding type) to confidence_ground_truth.json, right next to
+the config. analyze_confidence_test.py reads that map and the run's report and
+scores by id — no human matching of paraphrased text.
+
+Run this once, then run the real CLI (command printed at the end), then run
+analyze_confidence_test.py.
 """
+import json
 import os
 
 from mem0 import Memory
 
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"].strip()
+
+GROUND_TRUTH_PATH = "confidence_ground_truth.json"
 
 config = {
     "vector_store": {
@@ -45,8 +54,7 @@ config = {
 
 client = Memory.from_config(config)
 
-# (id_tag, text) — id_tag is just for our own ground-truth bookkeeping,
-# not passed to Mem0 (Mem0 assigns its own UUIDs).
+# (id_tag, text) — id_tag is our own ground-truth bookkeeping, not passed to Mem0.
 MEMORIES = [
     # --- duplicates: paraphrased, not template swaps (harder) ---
     ("dup1a", "I've been vegetarian for about five years now"),
@@ -88,15 +96,50 @@ MEMORIES = [
     ("noise8", "My favorite movie genre is science fiction"),
 ]
 
+# Ground-truth pairs: pair name -> (expected finding type, [tag_a, tag_b]).
+# The type is what a correct run should label the pair: mem-audit reports an
+# UPDATE as FindingType.STALE, hence "stale" for the upd* pairs.
+PAIR_TAGS = {
+    "dup1": ("duplicate", ["dup1a", "dup1b"]),
+    "dup2": ("duplicate", ["dup2a", "dup2b"]),
+    "dup3": ("duplicate", ["dup3a", "dup3b"]),
+    "contra1": ("contradiction", ["contra1a", "contra1b"]),
+    "contra2": ("contradiction", ["contra2a", "contra2b"]),
+    "upd1": ("stale", ["upd1a", "upd1b"]),
+    "upd2": ("stale", ["upd2a", "upd2b"]),
+}
+
+
+def _added_id(result) -> str:
+    """Pull the created memory id out of Mem0's add() return value."""
+    results = result.get("results", result) if isinstance(result, dict) else result
+    return str(results[0]["id"])
+
+
+tag_to_id = {}
 for tag, text in MEMORIES:
-    client.add(text, user_id="confidencetest", infer=False)
+    tag_to_id[tag] = _added_id(client.add(text, user_id="confidencetest", infer=False))
+
+pairs = {
+    name: {"type": ftype, "memory_ids": [tag_to_id[a], tag_to_id[b]]}
+    for name, (ftype, (a, b)) in PAIR_TAGS.items()
+}
+ground_truth = {
+    "user_id": "confidencetest",
+    "tag_to_id": tag_to_id,
+    "pairs": pairs,
+    # Facts that must never appear in any finding (near-miss trap + noise).
+    "expected_clean_tags": [t for t, _ in MEMORIES if t.startswith(("nearmiss", "noise"))],
+}
+
+with open(GROUND_TRUTH_PATH, "w", encoding="utf-8") as fh:
+    json.dump(ground_truth, fh, ensure_ascii=False, indent=2)
 
 print(f"Seeded {len(MEMORIES)} memories into ./confidence_test_qdrant_db under user_id='confidencetest'")
-print("\nGround truth (for later comparison — do not peek at results before running):")
-print("  Expected DUPLICATE pairs: dup1, dup2, dup3 (3 pairs)")
-print("  Expected CONTRADICTION pairs: contra1, contra2 (2 pairs)")
-print("  Expected UPDATE/stale pairs: upd1, upd2 (2 pairs)")
-print("  Expected to NOT be flagged: nearmiss pair, all 8 noise facts")
+print(f"Wrote ground-truth id map to {GROUND_TRUTH_PATH} "
+      f"({len(pairs)} planted pairs, {len(ground_truth['expected_clean_tags'])} clean facts)")
 print("\nNow run the real CLI:")
 print("  mem-audit run --user-id confidencetest --config confidence_config.json "
       "--embed-provider github --llm-provider cerebras --json-out confidence_report.json")
+print("Then score it:")
+print("  python dev-scripts/analyze_confidence_test.py")

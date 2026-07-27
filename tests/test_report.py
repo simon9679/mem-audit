@@ -97,6 +97,46 @@ def test_export_json_serializes_enums_to_strings_and_round_trips():
         assert isinstance(row["memory_ids"], list)
 
 
+def test_export_json_with_metadata_wraps_object_and_hides_no_keys():
+    findings = _findings_all_severities()
+    meta = {
+        "tool": "mem-audit",
+        "version": "0+test",
+        "embedder": {"provider": "github", "model": "openai/text-embedding-3-small"},
+        "judge": {"provider": "cerebras", "model": "gpt-oss-120b"},
+        "judge_verdicts": {"DUPLICATE": 3, "CONTRADICTION": 2, "UPDATE": 0, "UNRELATED": 5, "skipped": 0},
+    }
+    fd, path = tempfile.mkstemp(suffix=".json")
+    os.close(fd)
+    try:
+        export_json(findings, path, metadata=meta)
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    finally:
+        os.unlink(path)
+
+    assert isinstance(data, dict)
+    assert set(data.keys()) == {"metadata", "findings"}
+    assert data["metadata"]["tool"] == "mem-audit"
+    assert data["metadata"]["judge_verdicts"]["UNRELATED"] == 5
+    assert isinstance(data["findings"], list) and len(data["findings"]) == len(findings)
+    # No API key material of any kind in the serialized report.
+    assert "api_key" not in json.dumps(data).lower()
+
+
+def test_export_json_without_metadata_stays_a_bare_list():
+    findings = _findings_all_severities()
+    fd, path = tempfile.mkstemp(suffix=".json")
+    os.close(fd)
+    try:
+        export_json(findings, path)
+        with open(path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    finally:
+        os.unlink(path)
+    assert isinstance(data, list)
+
+
 def test_finding_to_dict_matches_export_shape():
     (finding,) = [
         Finding(
@@ -123,5 +163,7 @@ if __name__ == "__main__":
     test_report_sorts_highest_severity_first()
     test_empty_findings_prints_clean_message_without_crashing()
     test_export_json_serializes_enums_to_strings_and_round_trips()
+    test_export_json_with_metadata_wraps_object_and_hides_no_keys()
+    test_export_json_without_metadata_stays_a_bare_list()
     test_finding_to_dict_matches_export_shape()
     print("Report tests passed.")
