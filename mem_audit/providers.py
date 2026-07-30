@@ -42,6 +42,11 @@ class EndpointSpec:
     # request frequency. Set 0 if your account allows more. Not a claim about any
     # particular plan's allowance.
     min_request_interval: float
+    # For endpoints that need no real credential (e.g. a local Ollama server),
+    # a placeholder passed as the API key so the client still gets a non-empty
+    # value and no environment variable is required. None -> a real key from
+    # api_key_env is required, as usual.
+    api_key_default: str | None = None
 
 
 # Batch sizes are per-request ceilings the endpoint enforces on the embedding
@@ -83,6 +88,20 @@ PRESETS: dict[str, EndpointSpec] = {
         max_batch_items=128,
         min_request_interval=12.0,
     ),
+    "ollama": EndpointSpec(
+        name="ollama",
+        # A local Ollama server's OpenAI-compatible endpoint. Embeddings run on
+        # your own machine — no key, no quota, no external service. Point at a
+        # different host with --embed-base-url.
+        base_url="http://localhost:11434/v1",
+        api_key_env="OLLAMA_API_KEY",     # unused in practice; see api_key_default
+        embed_model="nomic-embed-text",   # `ollama pull nomic-embed-text` first
+        judge_model=None,                 # a local LLM judge is heavier; use --llm-base-url if wanted
+        max_batch_tokens=8_000,
+        max_batch_items=64,
+        min_request_interval=0.0,
+        api_key_default="ollama",         # Ollama ignores the key; no env var needed
+    ),
 }
 
 # Only the presets that can actually serve each role — used to build the CLI's
@@ -118,7 +137,7 @@ def embedder_from_preset(
     return openai_compatible_embedder(
         model=model,
         base_url=spec.base_url,
-        api_key=api_key,
+        api_key=api_key or spec.api_key_default,
         api_key_env=api_key_env_override or spec.api_key_env,
         max_batch_tokens=spec.max_batch_tokens,
         max_batch_items=spec.max_batch_items,
@@ -145,7 +164,7 @@ def judge_from_preset(
     return openai_compatible_judge(
         model=model,
         base_url=spec.base_url,
-        api_key=api_key,
+        api_key=api_key or spec.api_key_default,
         api_key_env=api_key_env_override or spec.api_key_env,
         max_retries=max_retries,
         client=client,

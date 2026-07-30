@@ -153,17 +153,36 @@ URL, which environment variable holds the key, and default model ids:
 | preset | role(s) | key env var | default model(s) |
 | --- | --- | --- | --- |
 | `openai` (default) | embeddings + judge | `OPENAI_API_KEY` | `text-embedding-3-small` (embed), `gpt-4o-mini` (judge) |
+| `ollama` | embeddings | none (local server) | `nomic-embed-text` |
 | `cerebras` | judge | `CEREBRAS_API_KEY` | `gpt-oss-120b` |
 | `github` ⚠️ retiring | embeddings | `GITHUB_TOKEN` (needs `models: read`) | `openai/text-embedding-3-small` |
 
-`github` is kept for now but **GitHub Models is being retired** (its endpoint
-returns HTTP 410); prefer `openai` or a custom endpoint (below) for embeddings.
-A mix-and-match example — OpenAI embeddings with a Cerebras judge:
+Two ways to do the embedding pass:
+
+- **`openai`** — the default; set `OPENAI_API_KEY` and go.
+- **`ollama`** — run embeddings locally, no key and no quota (your own compute). Install
+  [Ollama](https://ollama.com), `ollama pull nomic-embed-text`, and it talks to
+  the local server at `http://localhost:11434/v1` (override the host with
+  `--embed-base-url`; override the model with `--embed-model`).
 
 ```bash
+# OpenAI embeddings + Cerebras judge:
 mem-audit run --user-id alice --config ./mem0_config.json \
   --embed-provider openai --llm-provider cerebras
+
+# Fully local embeddings via Ollama (no key, no quota) + Cerebras judge:
+mem-audit run --user-id alice --config ./mem0_config.json \
+  --embed-provider ollama --llm-provider cerebras
 ```
+
+> For a fully-local run, point **mem0's own** embedder at Ollama too (it's a
+> separate config — see above). In your mem0 config use `"embedder": {"provider":
+> "openai", "config": {"model": "nomic-embed-text", "openai_base_url":
+> "http://localhost:11434/v1", "api_key": "ollama"}}` and set the qdrant
+> `embedding_model_dims` to `768` (nomic-embed-text's size).
+
+`github` is kept for now but **GitHub Models is being retired** (its endpoint
+returns HTTP 410); prefer `openai` or `ollama` for embeddings.
 
 For any endpoint not in that table, generic flags take over. **An explicit flag
 overrides the preset**, and an explicit `--embed-base-url` / `--llm-base-url`
