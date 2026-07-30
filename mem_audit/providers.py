@@ -50,10 +50,11 @@ class EndpointSpec:
 
 
 # Batch sizes are per-request ceilings the endpoint enforces on the embedding
-# call; the OpenAI values double as the generic defaults in embeddings.py, and
-# the GitHub endpoint has a tighter per-request budget so it carries smaller
-# numbers here. cerebras is a judge-only endpoint (embed_model=None), so its
-# batch fields are inert and just mirror the OpenAI defaults.
+# call; the OpenAI values double as the generic defaults in embeddings.py, while
+# an endpoint with a tighter per-request budget (e.g. a local Ollama server)
+# carries smaller numbers here. cerebras is a judge-only endpoint
+# (embed_model=None), so its batch fields are inert and just mirror the OpenAI
+# defaults.
 PRESETS: dict[str, EndpointSpec] = {
     "openai": EndpointSpec(
         name="openai",
@@ -63,16 +64,6 @@ PRESETS: dict[str, EndpointSpec] = {
         judge_model="gpt-4o-mini",
         max_batch_tokens=250_000,
         max_batch_items=128,
-        min_request_interval=0.0,
-    ),
-    "github": EndpointSpec(
-        name="github",
-        base_url="https://models.github.ai/inference",
-        api_key_env="GITHUB_TOKEN",
-        embed_model="openai/text-embedding-3-small",
-        judge_model=None,
-        max_batch_tokens=6_000,
-        max_batch_items=64,
         min_request_interval=0.0,
     ),
     "cerebras": EndpointSpec(

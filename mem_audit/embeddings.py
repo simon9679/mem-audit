@@ -21,8 +21,8 @@ EmbedFn = Callable[[Sequence[str]], np.ndarray]
 # elements, and a hard ~300k-token ceiling across the whole request (HTTP 400
 # "max_tokens_per_request" beyond it). These defaults keep items well under 2048
 # and tokens under 300k with headroom, so a batch never lands exactly on a
-# limit. Endpoints with tighter per-request budgets (e.g. GitHub Models, ~8K
-# tokens/request) carry their own smaller values in providers.py.
+# limit. An endpoint with a tighter per-request budget (e.g. a local Ollama
+# server) carries its own smaller values in providers.py.
 _OPENAI_MAX_BATCH_TOKENS = 250_000
 _OPENAI_MAX_BATCH_ITEMS = 128
 

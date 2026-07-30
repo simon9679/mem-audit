@@ -60,12 +60,17 @@ def test_default_missing_key_message_is_cli_friendly():
     assert "--embed-provider" in result.output, result.output  # the alternative
 
 
-def test_missing_key_message_names_the_right_var_for_github():
-    result = _run(["--embed-provider", "github"])
+def test_missing_key_message_names_the_expected_env_var():
+    # The named variable is the one actually expected — here a custom var from
+    # --embed-api-key-env on the escape-hatch path, not always OPENAI_API_KEY.
+    result = _run([
+        "--embed-base-url", "https://example.com/v1",
+        "--embed-model", "some-model",
+        "--embed-api-key-env", "MY_EMBED_KEY",
+    ], env={"OPENAI_API_KEY": None, "MY_EMBED_KEY": None})
     assert result.exit_code != 0, result.output
     _assert_no_library_internals(result.output)
-    # Names GITHUB_TOKEN, not always OPENAI_API_KEY.
-    assert "GITHUB_TOKEN" in result.output, result.output
+    assert "MY_EMBED_KEY" in result.output, result.output
 
 
 def test_cerebras_llm_command_still_gives_clean_message():
@@ -94,7 +99,7 @@ if __name__ == "__main__":
     test_embed_base_url_without_model_reports_model_before_mem0()
     test_llm_base_url_without_model_reports_model_not_missing_key()
     test_default_missing_key_message_is_cli_friendly()
-    test_missing_key_message_names_the_right_var_for_github()
+    test_missing_key_message_names_the_expected_env_var()
     test_cerebras_llm_command_still_gives_clean_message()
     test_no_key_message_for_judge_names_cerebras_var_and_flags()
     print("CLI argument + missing-key message tests passed.")

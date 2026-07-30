@@ -19,35 +19,35 @@ Run this once, then run the real CLI (command printed at the end), then run
 analyze_confidence_test.py.
 """
 import json
-import os
-
 from mem0 import Memory
-
-GITHUB_TOKEN = os.environ["GITHUB_TOKEN"].strip()
 
 GROUND_TRUTH_PATH = "confidence_ground_truth.json"
 
+# Local Ollama server for embeddings — no API key. Requires a running Ollama
+# with `ollama pull nomic-embed-text` (768-dim).
 config = {
     "vector_store": {
         "provider": "qdrant",
         "config": {
             "path": "./confidence_test_qdrant_db",
             "collection_name": "mem_audit_confidence_test",
+            "embedding_model_dims": 768,
         },
     },
     "embedder": {
         "provider": "openai",
         "config": {
-            "model": "openai/text-embedding-3-small",
-            "openai_base_url": "https://models.github.ai/inference",
-            "api_key": GITHUB_TOKEN,
+            "model": "nomic-embed-text",
+            "openai_base_url": "http://localhost:11434/v1",
+            "api_key": "ollama",
         },
     },
     "llm": {
         "provider": "openai",
         "config": {
-            "openai_base_url": "https://models.github.ai/inference",
-            "api_key": GITHUB_TOKEN,
+            "model": "llama3.2",
+            "openai_base_url": "http://localhost:11434/v1",
+            "api_key": "ollama",
         },
     },
 }
@@ -140,6 +140,6 @@ print(f"Wrote ground-truth id map to {GROUND_TRUTH_PATH} "
       f"({len(pairs)} planted pairs, {len(ground_truth['expected_clean_tags'])} clean facts)")
 print("\nNow run the real CLI:")
 print("  mem-audit run --user-id confidencetest --config confidence_config.json "
-      "--embed-provider github --llm-provider cerebras --json-out confidence_report.json")
+      "--embed-provider ollama --llm-provider cerebras --json-out confidence_report.json")
 print("Then score it:")
 print("  python dev-scripts/analyze_confidence_test.py")

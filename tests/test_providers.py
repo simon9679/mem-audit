@@ -90,8 +90,8 @@ def test_role_lists_reflect_the_table():
 # -- model selection -------------------------------------------------------- #
 def test_embedder_uses_preset_model_by_default():
     c = _RecordingEmbedClient()
-    embedder_from_preset("github", client=c)(["hello"])
-    assert c.models == ["openai/text-embedding-3-small"]
+    embedder_from_preset("openai", client=c)(["hello"])
+    assert c.models == ["text-embedding-3-small"]
 
 
 def test_embedder_applies_explicit_model_override():
@@ -134,9 +134,9 @@ def test_missing_judge_key_raises_valueerror_naming_env_var():
 
 
 def test_missing_embed_key_raises_valueerror_naming_env_var():
-    with _env_without("GITHUB_TOKEN"):
-        msg = _expect_valueerror(lambda: embedder_from_preset("github"))
-        assert "GITHUB_TOKEN" in msg
+    with _env_without("OPENAI_API_KEY"):
+        msg = _expect_valueerror(lambda: embedder_from_preset("openai"))
+        assert "OPENAI_API_KEY" in msg
 
 
 def test_unknown_preset_raises_valueerror_not_keyerror():

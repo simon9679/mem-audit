@@ -16,30 +16,32 @@ from mem_audit.detectors.duplicates import find_duplicate_candidates
 from mem_audit.detectors.contradictions import judge_pair
 from mem_audit.providers import embedder_from_preset, judge_from_preset
 
-GITHUB_TOKEN = os.environ["GITHUB_TOKEN"].strip()
 CEREBRAS_API_KEY = os.environ["CEREBRAS_API_KEY"].strip()
 
+# Local Ollama for embeddings (no key); requires `ollama pull nomic-embed-text`.
 config = {
     "vector_store": {
         "provider": "qdrant",
         "config": {
             "path": "./confidence_test_qdrant_db",
             "collection_name": "mem_audit_confidence_test",
+            "embedding_model_dims": 768,
         },
     },
     "embedder": {
         "provider": "openai",
         "config": {
-            "model": "openai/text-embedding-3-small",
-            "openai_base_url": "https://models.github.ai/inference",
-            "api_key": GITHUB_TOKEN,
+            "model": "nomic-embed-text",
+            "openai_base_url": "http://localhost:11434/v1",
+            "api_key": "ollama",
         },
     },
     "llm": {
         "provider": "openai",
         "config": {
-            "openai_base_url": "https://models.github.ai/inference",
-            "api_key": GITHUB_TOKEN,
+            "model": "llama3.2",
+            "openai_base_url": "http://localhost:11434/v1",
+            "api_key": "ollama",
         },
     },
 }
@@ -49,7 +51,7 @@ connector = Mem0Connector(client)
 records = connector.fetch_all(user_id="confidencetest")
 print(f"Fetched {len(records)} records\n")
 
-embed_fn = embedder_from_preset("github", api_key=GITHUB_TOKEN)
+embed_fn = embedder_from_preset("ollama")
 texts = [r.text for r in records]
 vectors = embed_fn(texts)
 sims = cosine_similarity_matrix(vectors)
