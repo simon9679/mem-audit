@@ -317,6 +317,10 @@ the pairs. Treat the *type* of a finding and the *absence* of extras as things
 to confirm by eye. That is exactly the position the tool takes anyway:
 read-only, human-in-the-loop. It flags; you decide.
 
+The full chronology — how these numbers moved between measurements, each
+hypothesis and how it was ruled out, and what turned out to be unanswerable — is
+in [docs/accuracy-postmortem.md](docs/accuracy-postmortem.md).
+
 ## Related work
 
 `mem-audit` is not the only project in this space. In rough order of how

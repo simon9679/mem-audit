@@ -2,16 +2,13 @@ __pycache__/
 *.pyc
 .venv/
 *.egg-info/
-report.json
 .env
 
-smoke_test_qdrant_db/
-
-mem0_config.json
-realistic_test_qdrant_db/
+# Run artifacts — never commit. These are produced by the CLI and the
+# dev-scripts (confidence test, smoke tests) and are reproducible on demand.
 report.json
-
-confidence_config.json
 confidence_report*.json
+mem0_config.json
+confidence_config.json
 confidence_ground_truth.json
-confidence_test_qdrant_db/
+*_qdrant_db/
