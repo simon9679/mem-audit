@@ -58,6 +58,6 @@ findings, total = run_audit(
 print_report(findings, total_memories=total, user_id="smoketest")
 
 assert total == 3, f"expected 3 memories, got {total}"
-print("\nSMOKE TEST PASSED: real Mem0 + real GitHub/Cerebras APIs work end-to-end.")
+print("\nSMOKE TEST PASSED: real Mem0 + local Ollama embeddings + Cerebras judge work end-to-end.")
 print("(No longer asserting the judge's exact label — a real LLM may reasonably")
 print(" call LGY/LGS an UPDATE rather than a CONTRADICTION; see chat for why.)")
