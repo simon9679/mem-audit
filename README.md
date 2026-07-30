@@ -89,44 +89,10 @@ two separate embedder/LLM setups, and they do not share flags.**
    "Choosing embedding and judge endpoints" below.
 
 Point mem-audit at a mem0 config you can actually bring up, with `--config`.
-You don't need an OpenAI account for this — mem0's `openai` provider is just an
-OpenAI-*compatible* client, and `openai_base_url` decides where it actually
-goes. Here it points mem0's own embedder and LLM at GitHub Models'
-OpenAI-compatible endpoint (needs a `models: read` token). **No keys in the
-file** — mem0 reads the key from the
-`OPENAI_API_KEY` environment variable, so for this endpoint you set
-`OPENAI_API_KEY` to your GitHub token:
-
-```json
-{
-  "vector_store": {
-    "provider": "qdrant",
-    "config": { "path": "./mem0_qdrant_db", "collection_name": "mem_audit" }
-  },
-  "embedder": {
-    "provider": "openai",
-    "config": {
-      "model": "openai/text-embedding-3-small",
-      "openai_base_url": "https://models.github.ai/inference"
-    }
-  },
-  "llm": {
-    "provider": "openai",
-    "config": {
-      "model": "openai/gpt-4o-mini",
-      "openai_base_url": "https://models.github.ai/inference"
-    }
-  }
-}
-```
-
-> mem0 sends anonymous usage telemetry to PostHog on startup. On a network
-> where that host is blocked, that surfaces as a wall of tracebacks around the
-> report — harmless, but it looks like mem-audit broke. Set `MEM0_TELEMETRY=False`
-> to turn it off.
-
-If you *do* have an OpenAI account, the config is the same shape without the
-`openai_base_url` lines (and `OPENAI_API_KEY` then holds a real OpenAI key):
+The simplest path is to **bring your own OpenAI key**: put it in `OPENAI_API_KEY`
+and use a config with **no keys in the file** (mem0 reads the key from that
+environment variable). One `OPENAI_API_KEY` then covers both mem0's own
+embedder/LLM here *and* mem-audit's default `openai` embedder and judge:
 
 ```json
 {
@@ -139,21 +105,64 @@ If you *do* have an OpenAI account, the config is the same shape without the
 }
 ```
 
+```bash
+export OPENAI_API_KEY=sk-...
+mem-audit run --user-id alice --config ./mem0_config.json --json-out report.json
+```
+
+> mem0 sends anonymous usage telemetry to PostHog on startup. On a network
+> where that host is blocked, that surfaces as a wall of tracebacks around the
+> report — harmless, but it looks like mem-audit broke. Set `MEM0_TELEMETRY=False`
+> to turn it off.
+
+Want a different OpenAI-compatible endpoint instead of OpenAI itself? mem0's
+`openai` provider is just an OpenAI-*compatible* client — `provider: "openai"`
+does not require OpenAI, and `openai_base_url` decides where it actually goes.
+Keep keys out of the file; mem0 sends whatever is in `OPENAI_API_KEY` to that
+base URL:
+
+```json
+{
+  "vector_store": {
+    "provider": "qdrant",
+    "config": { "path": "./mem0_qdrant_db", "collection_name": "mem_audit" }
+  },
+  "embedder": {
+    "provider": "openai",
+    "config": { "model": "text-embedding-3-small", "openai_base_url": "https://your-endpoint/v1" }
+  },
+  "llm": {
+    "provider": "openai",
+    "config": { "model": "gpt-4o-mini", "openai_base_url": "https://your-endpoint/v1" }
+  }
+}
+```
+
+> **GitHub Models is being retired.** Its endpoint (`models.github.ai`) now
+> returns HTTP 410 (a retirement brownout), so `--embed-provider github` and any
+> config pointing there is going away — use OpenAI or another OpenAI-compatible
+> embeddings endpoint instead.
+
 ## Choosing embedding and judge endpoints
 
-mem-audit's own embedder and judge talk to any OpenAI-compatible endpoint.
-Named presets are shortcuts for known endpoints — a base URL, which environment
-variable holds the key, and default model ids:
+mem-audit's own embedder and judge talk to any OpenAI-compatible endpoint, and
+**default to `openai` for both** — so with `OPENAI_API_KEY` set you don't need
+any of the flags below. Named presets are shortcuts for known endpoints — a base
+URL, which environment variable holds the key, and default model ids:
 
 | preset | role(s) | key env var | default model(s) |
 | --- | --- | --- | --- |
-| `openai` | embeddings + judge | `OPENAI_API_KEY` | `text-embedding-3-small` (embed), `gpt-4o-mini` (judge) |
-| `github` | embeddings | `GITHUB_TOKEN` (needs `models: read`) | `openai/text-embedding-3-small` |
+| `openai` (default) | embeddings + judge | `OPENAI_API_KEY` | `text-embedding-3-small` (embed), `gpt-4o-mini` (judge) |
 | `cerebras` | judge | `CEREBRAS_API_KEY` | `gpt-oss-120b` |
+| `github` ⚠️ retiring | embeddings | `GITHUB_TOKEN` (needs `models: read`) | `openai/text-embedding-3-small` |
+
+`github` is kept for now but **GitHub Models is being retired** (its endpoint
+returns HTTP 410); prefer `openai` or a custom endpoint (below) for embeddings.
+A mix-and-match example — OpenAI embeddings with a Cerebras judge:
 
 ```bash
 mem-audit run --user-id alice --config ./mem0_config.json \
-  --embed-provider github --llm-provider cerebras
+  --embed-provider openai --llm-provider cerebras
 ```
 
 For any endpoint not in that table, generic flags take over. **An explicit flag
