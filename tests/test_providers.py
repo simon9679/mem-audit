@@ -100,6 +100,32 @@ def test_embedder_applies_explicit_model_override():
     assert c.models == ["custom-embed-model"]
 
 
+# -- ollama preset: local, keyless embeddings ------------------------------- #
+def test_ollama_is_an_embedding_preset_only():
+    assert "ollama" in EMBED_PRESETS
+    assert "ollama" not in JUDGE_PRESETS
+
+
+def test_ollama_embedder_uses_nomic_by_default():
+    c = _RecordingEmbedClient()
+    embedder_from_preset("ollama", client=c)(["hello"])
+    assert c.models == ["nomic-embed-text"]
+
+
+def test_ollama_preset_requires_no_api_key():
+    # No OLLAMA_API_KEY / OPENAI_API_KEY in the environment: a keyless preset
+    # (api_key_default set) must NOT raise the missing-key ValueError. Building
+    # the real client may fail later if openai isn't installed (clean CI venv) —
+    # that's a different error and fine; the point is no missing-key ValueError.
+    with _env_without("OLLAMA_API_KEY", "OPENAI_API_KEY"):
+        try:
+            embedder_from_preset("ollama")
+        except ValueError as e:
+            raise AssertionError(f"ollama preset must not require a key: {e}")
+        except Exception:
+            pass  # e.g. ModuleNotFoundError('openai') in a clean venv — acceptable
+
+
 # -- key resolution: ValueError naming the env var, never KeyError/None ----- #
 def test_missing_judge_key_raises_valueerror_naming_env_var():
     with _env_without("CEREBRAS_API_KEY"):
@@ -168,6 +194,9 @@ if __name__ == "__main__":
     test_role_lists_reflect_the_table()
     test_embedder_uses_preset_model_by_default()
     test_embedder_applies_explicit_model_override()
+    test_ollama_is_an_embedding_preset_only()
+    test_ollama_embedder_uses_nomic_by_default()
+    test_ollama_preset_requires_no_api_key()
     test_missing_judge_key_raises_valueerror_naming_env_var()
     test_missing_embed_key_raises_valueerror_naming_env_var()
     test_unknown_preset_raises_valueerror_not_keyerror()
