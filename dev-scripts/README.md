@@ -11,7 +11,7 @@ write config/db files relative to the current directory:
 python dev-scripts/write_confidence_config.py
 python dev-scripts/confidence_test_seed.py
 mem-audit run --user-id confidencetest --config confidence_config.json \
-  --embed-provider github --llm-provider cerebras --json-out confidence_report.json
+  --embed-provider ollama --llm-provider cerebras --json-out confidence_report.json
 python dev-scripts/analyze_confidence_test.py
 ```
 
@@ -25,5 +25,6 @@ python dev-scripts/analyze_confidence_test.py
 - `real_smoke_test.py` — original 3-fact real-API smoke test, superseded
   by the above.
 
-Needs `GITHUB_TOKEN` and `CEREBRAS_API_KEY` env vars set. None of these
+Embeddings run against a local Ollama server (`ollama pull nomic-embed-text`,
+no key). The judge needs `CEREBRAS_API_KEY` in the environment. None of these
 scripts contain credentials — they read from the environment.

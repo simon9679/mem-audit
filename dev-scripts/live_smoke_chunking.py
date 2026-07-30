@@ -11,7 +11,7 @@ to the repo, audit stays read-only):
 
   Step 0  Pick an embedder by what's available, and ALWAYS route it through the
           library's real batch wrapper (_embed_in_batches):
-            1. GITHUB_TOKEN (ascii, models:read)  -> github_models path (6000/64)
+            1. MEM_AUDIT_OLLAMA=1                   -> local Ollama path  (6000/64)
             2. OPENAI_API_KEY                      -> openai path        (250000/128)
             3. else local sentence-transformers    -> wrapped in an OpenAI-embeddings-
                shaped adapter and fed to openai_compatible_embedder() with ARTIFICIALLY LOW
@@ -135,21 +135,21 @@ class EmbedderChoice:
 
 
 def build_embedder() -> EmbedderChoice:
-    gh = os.environ.get("GITHUB_TOKEN", "").strip()
+    use_ollama = os.environ.get("MEM_AUDIT_OLLAMA", "").strip()
     openai_key = os.environ.get("OPENAI_API_KEY", "").strip()
 
-    # A GitHub token full of non-ascii chars is a placeholder, not a real PAT —
-    # httpx can't even encode the Authorization header from it, so treat it as
-    # absent rather than crashing the smoke test on a fake credential.
-    if gh and gh.isascii():
+    # A local Ollama server exposes an OpenAI-compatible endpoint with no key.
+    # Set MEM_AUDIT_OLLAMA=1 (after `ollama pull nomic-embed-text`) to exercise
+    # the chunking path against a real endpoint with small thresholds, offline.
+    if use_ollama:
         import openai
 
-        raw = openai.OpenAI(base_url="https://models.github.ai/inference", api_key=gh)
+        raw = openai.OpenAI(base_url="http://localhost:11434/v1", api_key="ollama")
         counting = _CountingClient(raw)
-        model = "openai/text-embedding-3-small"
+        model = "nomic-embed-text"
         fn = openai_compatible_embedder(model=model, client=counting, max_batch_items=64, max_batch_tokens=6000)
-        return EmbedderChoice(fn, counting, "github_models", model, 1536, 64, 6000,
-                              "real GitHub Models per-request thresholds")
+        return EmbedderChoice(fn, counting, "ollama", model, 768, 64, 6000,
+                              "local Ollama, small per-request thresholds")
 
     if openai_key:
         import openai
@@ -259,10 +259,10 @@ def build_seed_texts() -> list[str]:
         texts.append(("Journal entry %d. " % k) + long_body * 8)  # ~1800+ chars
 
     # Two near-8K-token facts: each fact's own token estimate must sit just UNDER
-    # the real GitHub Models / OpenAI per-input ceiling (~8192) — an input that
-    # exceeds it on its own is a separate error, not a chunking one. Each still
-    # overflows the per-request batch budget (6000 for GitHub), so it's emitted in
-    # a batch by itself and probes behaviour right at the ceiling.
+    # the real OpenAI-family per-input ceiling (~8192) — an input that exceeds it
+    # on its own is a separate error, not a chunking one. Each still overflows the
+    # small per-request batch budget (6000), so it's emitted in a batch by itself
+    # and probes behaviour right at the ceiling.
     for k in range(2):
         texts.append(("Extended activity log %d. " % k)
                       + " ".join("token%d" % j for j in range(2600)))  # ~7K tokens, < 8192
@@ -476,13 +476,13 @@ def main() -> int:
 
     # ---- Step 3: real negative ceiling check (live, real provider only) ----
     # A single unbatched create() must fail once the request exceeds the real
-    # per-request token ceiling (measured: 64000 for GitHub Models). The 161-fact
+    # per-request token ceiling (~64000 on OpenAI-family endpoints). The 161-fact
     # set (~16.7K tokens) is under that, so we build a compact probe set that
     # clears it: ~11 near-7K inputs (each < 8192 per-input, > 64000 in total).
     # Raw single call over the probe set -> expected 413; the batched path over
     # the SAME set -> pass. Direct proof the fix solves a real endpoint problem.
     neg = None  # (raw_failed, detail, batched_ok, big_n, big_tokens)
-    if ch.provider in ("github_models", "openai"):
+    if ch.provider in ("ollama", "openai"):
         block = "Ceiling probe %d. " + " ".join("token%d" % j for j in range(2600))
         big = [block % k for k in range(11)]  # 11 * ~6.8K ~= 75K tokens, over 64000
         big_tokens = sum(count_tokens(t) for t in big)

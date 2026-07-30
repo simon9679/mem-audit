@@ -64,12 +64,11 @@ def _retry_after_seconds(exc: BaseException) -> Optional[float]:
     Pull a `retry-after` hint (in seconds) out of a rate-limit error if one is
     present, else None.
 
-    GitHub Models in particular returns a real `retry-after` header on 429
-    (observed values in the tens of thousands of seconds for the daily
-    `UserByModelByDay` quota), so honoring it matters — a fixed sleep can't.
-    We look at both the exception's own attributes and the underlying HTTP
-    response headers, since openai-python surfaces these in different places
-    across versions and compatible clients.
+    Some endpoints return a real `retry-after` header on 429 (values as large as
+    tens of thousands of seconds when a daily quota is exhausted), so honoring it
+    matters — a fixed sleep can't. We look at both the exception's own attributes
+    and the underlying HTTP response headers, since openai-python surfaces these
+    in different places across versions and compatible clients.
     """
     # Some clients attach retry_after / retry-after directly to the exception.
     for attr in ("retry_after", "retry_after_seconds"):

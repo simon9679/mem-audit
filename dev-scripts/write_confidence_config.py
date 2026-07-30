@@ -1,7 +1,7 @@
+"""Writes confidence_config.json pointing mem0 at a local Ollama server
+(embeddings via nomic-embed-text). No API key needed. Requires a running Ollama
+with `ollama pull nomic-embed-text`."""
 import json
-import os
-
-GITHUB_TOKEN = os.environ["GITHUB_TOKEN"].strip()
 
 config = {
     "vector_store": {
@@ -9,21 +9,23 @@ config = {
         "config": {
             "path": "./confidence_test_qdrant_db",
             "collection_name": "mem_audit_confidence_test",
+            "embedding_model_dims": 768,
         },
     },
     "embedder": {
         "provider": "openai",
         "config": {
-            "model": "openai/text-embedding-3-small",
-            "openai_base_url": "https://models.github.ai/inference",
-            "api_key": GITHUB_TOKEN,
+            "model": "nomic-embed-text",
+            "openai_base_url": "http://localhost:11434/v1",
+            "api_key": "ollama",
         },
     },
     "llm": {
         "provider": "openai",
         "config": {
-            "openai_base_url": "https://models.github.ai/inference",
-            "api_key": GITHUB_TOKEN,
+            "model": "llama3.2",
+            "openai_base_url": "http://localhost:11434/v1",
+            "api_key": "ollama",
         },
     },
 }

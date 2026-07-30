@@ -5,33 +5,32 @@ closer to what a real companion-bot memory store looks like than the
 3-fact smoke test. Run this ONCE, then run the real `mem-audit` CLI
 against the resulting store (see instructions printed at the end).
 """
-import os
-
 from mem0 import Memory
 
-GITHUB_TOKEN = os.environ["GITHUB_TOKEN"].strip()
-
+# Local Ollama for embeddings (no key); requires `ollama pull nomic-embed-text`.
 config = {
     "vector_store": {
         "provider": "qdrant",
         "config": {
             "path": "./realistic_test_qdrant_db",
             "collection_name": "mem_audit_realistic_test",
+            "embedding_model_dims": 768,
         },
     },
     "embedder": {
         "provider": "openai",
         "config": {
-            "model": "openai/text-embedding-3-small",
-            "openai_base_url": "https://models.github.ai/inference",
-            "api_key": GITHUB_TOKEN,
+            "model": "nomic-embed-text",
+            "openai_base_url": "http://localhost:11434/v1",
+            "api_key": "ollama",
         },
     },
     "llm": {
         "provider": "openai",
         "config": {
-            "openai_base_url": "https://models.github.ai/inference",
-            "api_key": GITHUB_TOKEN,
+            "model": "llama3.2",
+            "openai_base_url": "http://localhost:11434/v1",
+            "api_key": "ollama",
         },
     },
 }
@@ -71,4 +70,4 @@ for text in MEMORIES:
 print(f"Seeded {len(MEMORIES)} memories into ./realistic_test_qdrant_db under user_id='realistictest'")
 print("\nNow run the actual CLI against it:")
 print("  mem-audit run --user-id realistictest --config mem0_config.json "
-      "--embed-provider github --llm-provider cerebras --json-out report.json")
+      "--embed-provider ollama --llm-provider cerebras --json-out report.json")

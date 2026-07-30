@@ -138,11 +138,6 @@ base URL:
 }
 ```
 
-> **GitHub Models is being retired.** Its endpoint (`models.github.ai`) now
-> returns HTTP 410 (a retirement brownout), so `--embed-provider github` and any
-> config pointing there is going away — use OpenAI or another OpenAI-compatible
-> embeddings endpoint instead.
-
 ## Choosing embedding and judge endpoints
 
 mem-audit's own embedder and judge talk to any OpenAI-compatible endpoint, and
@@ -155,7 +150,6 @@ URL, which environment variable holds the key, and default model ids:
 | `openai` (default) | embeddings + judge | `OPENAI_API_KEY` | `text-embedding-3-small` (embed), `gpt-4o-mini` (judge) |
 | `ollama` | embeddings | none (local server) | `nomic-embed-text` |
 | `cerebras` | judge | `CEREBRAS_API_KEY` | `gpt-oss-120b` |
-| `github` ⚠️ retiring | embeddings | `GITHUB_TOKEN` (needs `models: read`) | `openai/text-embedding-3-small` |
 
 Two ways to do the embedding pass:
 
@@ -180,9 +174,6 @@ mem-audit run --user-id alice --config ./mem0_config.json \
 > "openai", "config": {"model": "nomic-embed-text", "openai_base_url":
 > "http://localhost:11434/v1", "api_key": "ollama"}}` and set the qdrant
 > `embedding_model_dims` to `768` (nomic-embed-text's size).
-
-`github` is kept for now but **GitHub Models is being retired** (its endpoint
-returns HTTP 410); prefer `openai` or `ollama` for embeddings.
 
 For any endpoint not in that table, generic flags take over. **An explicit flag
 overrides the preset**, and an explicit `--embed-base-url` / `--llm-base-url`
@@ -210,8 +201,8 @@ Keys are read from environment variables, never passed as flags — see
 
 ```
 OPENAI_API_KEY=      # openai preset (embeddings and/or judge)
-GITHUB_TOKEN=        # github preset (embeddings); needs the 'models: read' permission
 CEREBRAS_API_KEY=    # cerebras preset (judge)
+# ollama preset (embeddings) needs no key — it's a local server
 ```
 
 ## What a run costs you (in calls, not dollars)
@@ -275,55 +266,51 @@ default embedder needs `OPENAI_API_KEY`).
 
 ## Measured accuracy
 
-Three runs against the **same** 24-fact synthetic store with known ground truth
-(7 planted pairs — 3 duplicate, 2 contradiction, 2 update — paraphrased, not
+All runs use the **same** 24-fact synthetic store with known ground truth (7
+planted pairs — 3 duplicate, 2 contradiction, 2 update — paraphrased, not
 template swaps; plus one topically-related "trap" pair and 8 noise facts),
-through the real CLI with real providers (GitHub Models embeddings + Cerebras
-`gpt-oss-120b` judge, not mocks). Run 1 is when the tool was first written; runs
-2 and 3 were done back-to-back later, on a fresh clone and a fresh store.
+scored mechanically by memory id (`dev-scripts/analyze_confidence_test.py`).
 
-| | run 1 | run 2 | run 3 |
-| --- | --- | --- | --- |
-| candidate pairs | — | 76 | 76 |
-| findings | 7 | 10 | 10 |
-| planted pairs caught (recall) | 7/7 | 7/7 | 7/7 |
-| false positives | 0 | 3 | 3 |
-| update pairs typed as CONTRADICTION | 0 | 2 | 2 |
+**Current measurement (reproducible today, fully local).** Local Ollama
+`nomic-embed-text` embeddings + Cerebras `gpt-oss-120b` judge, real CLI, not
+mocks — 85 candidate pairs:
 
-What holds across all three:
+- **recall 7/7** (every planted pair caught; trap pair and all 8 noise facts clean)
+- **precision 7/8** — 1 false positive
+- of the 7 caught: **5 correct type, 2 wrong type** (both update pairs judged
+  CONTRADICTION instead of stale/update)
 
-- **Recall is stable: 7/7 every time.** The trap pair and all 8 noise facts
-  stayed clean in every run — zero missed pairs, and the hard "don't flag the
-  near-miss" direction never failed.
-- **Within one environment the tool is deterministic.** Runs 2 and 3 were
-  identical: the same 76 candidate pairs, the same 10 findings, a full match on
-  memory ids. So this is *not* LLM sampling noise (`temperature=0.0`, and two
-  consecutive runs agreed exactly).
+**Historical measurement (no longer reproducible).** Three earlier runs used
+GitHub Models `text-embedding-3-small` embeddings + the same Cerebras judge:
+recall 7/7 in all three; findings 7 in the first run, 10 in the two later ones
+(0 vs 3 false positives). **GitHub Models was fully retired on July 30, 2026**,
+so that exact configuration can no longer be run — by us or by you.
 
-What shifted between run 1 and the later pair:
+**What this tells us — sharpened by the retirement.** Between the first and last
+measurements it wasn't a parameter or a model version that changed; the *entire
+embedding endpoint disappeared* and was replaced by a different model on a
+different host. Across that change:
 
-- **7 findings became 10** — i.e. 0 false positives became 3 (a data-analyst
-  fact matched against an engineering-degree fact twice, and a commute fact
-  against a barista fact).
-- **Two update pairs came back as CONTRADICTION instead of stale/update** —
-  the pair was found correctly, but typed wrong.
+- **Recall held at 7/7** on two completely different embedders (cloud
+  `text-embedding-3-small`, 1536-dim, vs local `nomic-embed-text`, 768-dim). So
+  completeness is robust to the embedder.
+- **The two update-as-CONTRADICTION mislabels reproduced on both configs.** A
+  pair found but mistyped the same way regardless of embedder is a stable
+  property of the **judge**, not noise.
+- **The false-positive count moved (3 → 1).** What the judge is even asked about
+  depends on which pairs the embedding pass surfaces, so the extras track
+  **candidate selection** (the embedder), not the judge.
 
-We could not establish the cause, and cannot establish it retroactively,
-because those early reports **stored nothing about how they were produced** —
-no model version, no parameters. What we ruled out, from the evidence: our own
-code (the judge prompt, `temperature`, model name, and candidate-selection code
-are byte-identical across the runs), stale database state (fresh clone, fresh
-store, 24 memories scanned with 24 distinct timestamps), and in-session LLM
-non-determinism (runs 2 and 3 were identical). What remains — and can't be
-recovered after the fact — is a silent change to the model or embedder behind
-the same name between measurements separated by time.
+That split — recall and the judge's type errors are stable; false positives ride
+on the embedder — is the actual result here, and it's worth more than any single
+number. (One measurement per config and a two-finding gap is *not* evidence that
+one embedder is more accurate than the other — we make no such claim.)
 
-That gap is why `--json-out` reports now embed a `metadata` block (tool version,
-provider and **actual** model names, all parameters, candidate-pair count, and
-the judge's verdict distribution): so two runs can be compared, and the next
-drift is diagnosable instead of a mystery. `dev-scripts/analyze_confidence_test.py`
-scores a run against the planted pairs by memory id (no eyeballing paraphrased
-text), and the same computation is checked in `tests/test_confidence_analysis.py`.
+Reports now embed a `metadata` block (tool version, provider and **actual**
+model names, all parameters, candidate-pair count, judge verdict distribution),
+so a run records how it was produced and the next drift is diagnosable rather
+than a mystery — the reason the old GitHub Models numbers can't be reconstructed
+is precisely that those reports stored none of this.
 
 **What this means for you:** rely on recall — mem-audit is good at *surfacing*
 the pairs. Treat the *type* of a finding and the *absence* of extras as things
