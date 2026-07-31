@@ -126,4 +126,19 @@ day says nothing about reproducibility a month later unless the version of the
 entire stack is recorded with the result.** And the thing that fails need not be
 the model: an entire provider can disappear. Here, one did.
 
+## Where this procedure comes from
+
+The moves in this postmortem — re-run the same store, check whether the numbers
+reproduce, and separate what holds from what floats — are not ad hoc. They are
+steps of a falsification protocol written up separately in
+[`simon9679/tbg-postmortem`](https://github.com/simon9679/tbg-postmortem): a
+cheap-to-expensive procedure for deciding whether a memory system's advantage
+deserves trust before an expensive comparison. That protocol came out of a
+different project — a belief-memory engine — and mem-audit is a system it was
+**not** designed for. Its step 2, reproducibility (re-ingest), nonetheless did
+exactly what it is meant to do here: the original "7/7 planted pairs, 0 false
+positives" claim did not survive a repeat run, which surfaced three false
+positives the single run had hidden. A claim that fails re-ingest was never a
+measurement — which is the whole reason the step exists.
+
 [gh]: https://github.blog/changelog/2026-07-01-github-models-is-being-fully-retired-on-july-30-2026/
