@@ -31,8 +31,8 @@ the primary records and are not rewritten.
 The method is a falsification-first protocol: for each claim, register a prediction
 before the run, keep the raw output, use controls, and state what a third party
 would need to confirm it without trusting the authors. Here it is applied to an
-**external** system, at its first two steps — (1) measure whether two ingests of the
-same conversation produce the same memory, and (2) if not, find why.
+**external** system through three checks: a repeat-run comparison, noise
+decomposition, and pre-registration.
 
 Mem0 is a widely used open-source memory layer for LLM applications: it extracts
 "facts" from a conversation and stores them for later retrieval. Its extraction
@@ -317,11 +317,11 @@ Registered before each run; not edited. Misses kept.
 
 Raw data files are outside the repository (withheld-dataset derivatives). SHA-256
 computed once at run completion; files unchanged since. Code files
-(`symdiff_probe.py`, `mem0_resume.py`, `analyze_hi.py`, `window_once.py`,
+(`symdiff_probe.py`, `compare_dumps.py`, `mem0_resume.py`, `analyze_hi.py`, `window_once.py`,
 `retrieval_questions.json`, …) are committed in this directory; git guarantees their
 integrity.
 
-Full SHA-256 (64 hex). `<DUMPS>`, `<MAXTOKENS>`, `<RESUME>` are the three local
+Full SHA-256 (64 hex). `<DUMPS>`, `<MAXTOKENS>`, `<RESUME>`, `<2X>` are local
 output directories used by the runs (outside the repository; substitute your own).
 Only the file name and SHA-256 matter for verification — the directory is incidental.
 
@@ -338,8 +338,14 @@ Only the file name and SHA-256 matter for verification — the directory is inci
 | H per-session instrumentation | `<RESUME>/state_H.json` | 8105 | `7924e99c8688a83ff1fc83a64ad85349f094977fc129b680b04e87ea303dad8c` | `window_once.py` |
 | I per-session instrumentation | `<RESUME>/state_I.json` | 8105 | `9f624dcfa2d8afd22f05b2ea3b266eb3630f1bd006bdc12ef5dcbf671697632d` | `window_once.py` |
 | H↔I symdiff, prefix, retrieval, amplification | `<RESUME>/analysis_HI.json` | 2932 | `1bec9e4e1c09f912fe52fba38adbe3e1c01f51e93677dbc645778017791474dd` | `analyze_hi.py` |
-| 20 questions (frozen) | `mem-audit/retrieval_questions.json` (in repo) | 1303 | `4daba3365a270926e3ee13a2084b78755c54081af89c6de9988bff197986067d` | fixed before runs |
-| the metric itself (unchanged in every comparison) | `mem-audit/symdiff_probe.py` (in repo) | 5342 | `29c1b617486789c5ca69547483dba8420d5a9dae5434c3d82decf66ff8b5ccec` | — |
+| H2 facts (2.0.17) | `<2X>/dump_H2_p8.json` | 11123 | `4282711266d1d33c6de55d4127ff40555b991fe2d3cab676640cb39a423ca4c5` | `run_pair_2x.py` (mem0_resume_2x) |
+| I2 facts (2.0.17) | `<2X>/dump_I2_p8.json` | 12092 | `697f92f2b4ba9e3046a403da00cf2494f5f0d9ad1dbaea59e6fc7c0d8dcff864` | `run_pair_2x.py` |
+| H2 per-session + call-count (2.0.17) | `<2X>/state_H2.json` | 5363 | `1769c3bbcb62e952979e3a821afc47eebc1010c823c63f0fb825df42921d1299` | `run_pair_2x.py` |
+| I2 per-session + call-count (2.0.17) | `<2X>/state_I2.json` | 5361 | `0211c4dfd03c53f03036139042baf4dffa747c233c8c40758454ae71400f15b9` | `run_pair_2x.py` |
+| H2↔I2 symdiff, prefix, retrieval, amplification (2.0.17) | `<2X>/analysis_H2I2.json` | 2901 | `f69a0d549f5d01d6f3cba625ac869d50190efe933a2c1f7ea174f229d222b6ff` | `analyze_hi_2x.py` |
+| 20 questions (frozen) | `audit/retrieval_questions.json` (in repo) | 1303 | `4daba3365a270926e3ee13a2084b78755c54081af89c6de9988bff197986067d` | fixed before runs |
+| the metric itself (unchanged in every comparison) | `audit/symdiff_probe.py` (in repo) | 5342 | `29c1b617486789c5ca69547483dba8420d5a9dae5434c3d82decf66ff8b5ccec` | — |
+| dump-object adapter | `audit/compare_dumps.py` (in repo) | 1612 | `3ab6b948c331a86c7016169c3e9f9b08b0195bcb3edbe7388e314ff0ec8017a7` | — |
 
 All SHA-256 above verify with `sha256sum <file>`. One caveat on the questions
 file: `PREREG_mem0_retrieval.md` registered `5e51de93…`, which is the hash of the
@@ -347,10 +353,11 @@ file: `PREREG_mem0_retrieval.md` registered `5e51de93…`, which is the hash of 
 proves the 20 questions were fixed before the run; the file-bytes hash above is
 `4daba336…`. Both are correct; they attest different things.
 
-Reproduce a comparison, e.g. H↔I:
-`python mem-audit/symdiff_probe.py --a dump_H_p8.json --b dump_I_p8.json --json-out out.json`
+`audit/compare_dumps.py` extracts fact texts from the object-shaped dumps before
+calling the unchanged metric. Reproduce a comparison, e.g. H↔I:
+`python audit/compare_dumps.py <RESUME>/dump_H_p8.json <RESUME>/dump_I_p8.json`
 Full H↔I analysis (symdiff + prefix + retrieval + amplification):
-`python mem-audit/analyze_hi.py`.
+`python audit/analyze_hi.py`.
 
 ---
 
