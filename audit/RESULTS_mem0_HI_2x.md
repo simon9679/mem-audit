@@ -103,5 +103,6 @@ run completion, files unchanged since.
 | I2 per-session + call-count | `<2X>/state_I2.json` | 5361 | `0211c4dfd03c53f03036139042baf4dffa747c233c8c40758454ae71400f15b9` | `run_pair_2x.py` |
 | H2↔I2 symdiff, prefix, retrieval, amplification | `<2X>/analysis_H2I2.json` | 2901 | `f69a0d549f5d01d6f3cba625ac869d50190efe933a2c1f7ea174f229d222b6ff` | `analyze_hi_2x.py` |
 
-Reproduce: `python mem-audit/symdiff_probe.py --a dump_H2_p8.json --b dump_I2_p8.json --json-out out.json`
-(dump-level); `python mem-audit/analyze_hi_2x.py` for the full analysis.
+`audit/compare_dumps.py` extracts fact texts from the object-shaped dumps before
+calling the unchanged metric. Reproduce: `python audit/compare_dumps.py <2X>/dump_H2_p8.json <2X>/dump_I2_p8.json`
+(dump-level); `python audit/analyze_hi_2x.py` for the full analysis.
