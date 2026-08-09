@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `audit/` — a self-contained external audit of Mem0's own consistency,
+  separate from mem-audit's tool-accuracy measurement in `docs/`. Covers three
+  silent-write-loss defects measured on mem0ai 1.0.11 (all confirmed fixed
+  upstream in 2.x) and one that isn't a defect: extraction non-reproducibility
+  at `temperature=0`, still present on mem0ai 2.0.17. Consolidated report in
+  `audit/AUDIT_mem0.md`, with pre-registrations, per-stage results, the
+  silent-loss write-up, and the harness/probe code that produced the numbers.
+  Linked from the README under "Is Mem0 itself reproducible?".
+
 ## [0.1.0] - 2026-07-31
 
 First public release.

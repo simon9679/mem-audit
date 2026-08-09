@@ -321,6 +321,32 @@ The full chronology — how these numbers moved between measurements, each
 hypothesis and how it was ruled out, and what turned out to be unanswerable — is
 in [docs/accuracy-postmortem.md](docs/accuracy-postmortem.md).
 
+## Is Mem0 itself reproducible? (external audit)
+
+Beyond scoring `mem-audit`'s own accuracy above, the tool was also pointed at a
+deeper question: does Mem0 store the *same* memory across two identical runs of
+the same conversation? The full write-up — pre-registered predictions, raw
+result tables, and the harness code — lives in
+[`audit/AUDIT_mem0.md`](audit/AUDIT_mem0.md).
+
+- **Three silent-write-loss defects**, measured on mem0ai 1.0.11: output
+  truncation on the growing update-decision payload, a swallowed `429` that
+  makes `add()` report success on a write that never happened, and a
+  quota-reservation loop where fixing the first defect provokes the second.
+  All three are **confirmed fixed upstream in mem0ai 2.x**
+  ([`audit/FINDINGS_silent_loss.md`](audit/FINDINGS_silent_loss.md)).
+- **The headline finding survives the fix.** On the current release
+  (mem0ai 2.0.17), two clean runs of the same 33-session dialogue at
+  `temperature=0` still agree on only **~9% of facts byte-for-byte** (~22% by
+  meaning). Divergence is ~0% on short conversations and climbs to 78% by
+  session 32 with no plateau — extraction reproducibility isn't an engineering
+  bug the refactor removed, it's a property of LLM-based extraction itself
+  ([`audit/RESULTS_mem0_HI_2x.md`](audit/RESULTS_mem0_HI_2x.md)).
+
+This is exactly the kind of drift `mem-audit` is meant to help you *see* after
+the fact — it doesn't prevent it, and per "What it does not do" above, it never
+touches your store.
+
 ## Related work
 
 `mem-audit` is not the only project in this space. In rough order of how
