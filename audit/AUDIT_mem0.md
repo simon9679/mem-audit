@@ -351,7 +351,7 @@ All SHA-256 above verify with `sha256sum <file>`. One caveat on the questions
 file: `PREREG_mem0_retrieval.md` registered `5e51de93…`, which is the hash of the
 *question list content* (`sha256(json.dumps(list))`), not of the file bytes — it
 proves the 20 questions were fixed before the run; the file-bytes hash above is
-`4daba336…`. Both are correct; they attest different things.
+`6513cf52…`. Both are correct; they attest different things.
 
 `audit/compare_dumps.py` extracts fact texts from the object-shaped dumps before
 calling the unchanged metric. Reproduce a comparison, e.g. H↔I:
