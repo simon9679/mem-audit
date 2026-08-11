@@ -343,6 +343,10 @@ result tables, and the harness code — lives in
   bug the refactor removed, it's a property of LLM-based extraction itself
   ([`audit/RESULTS_mem0_HI_2x.md`](audit/RESULTS_mem0_HI_2x.md)).
 
+  A separate J4/K4 configuration check with `max_tokens=4000` and
+  `reasoning_effort=low` also found strong run-to-run divergence
+  ([`audit/RESULTS_mem0_J4K4.md`](audit/RESULTS_mem0_J4K4.md)).
+
 This is exactly the kind of drift `mem-audit` is meant to help you *see* after
 the fact — it doesn't prevent it, and per "What it does not do" above, it never
 touches your store.

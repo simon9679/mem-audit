@@ -187,6 +187,16 @@ percentage is volatile; the 1.0.11→2.0.17 *direction* is not compared (several
 things changed at once); and the curve-shape contrast with 1.0.11 (which plateaued
 near 35 %) is noted only as an observation that **needs a larger n**.
 
+### 3.5 Configuration replication on the current release (J4/K4)
+
+A second clean pair on mem0ai 2.0.17 (J4/K4) provides a configuration replication
+of §3.4 with `max_tokens=4000` and `reasoning_effort=low`. Both 33-session runs
+completed with one `stop` call per session, but produced 228 and 211 facts; exact
+symdiff was **98.61 %**, and **0/20** frozen retrieval questions returned an
+identical top-5. This is a second measurement under a different working
+configuration, not a generalization beyond the tested dialogue, model, and provider
+([`RESULTS_mem0_J4K4.md`](RESULTS_mem0_J4K4.md)).
+
 ## 4. Numbers
 
 **A/B/C and H/I answer different questions and are not two versions of one run.**
