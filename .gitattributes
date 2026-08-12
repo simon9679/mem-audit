@@ -2,3 +2,6 @@
 audit/results/MANIFEST.sha256 text eol=lf
 audit/results/analysis_J4K4.json text eol=lf
 audit/results/retrieval_J4K4.json text eol=lf
+
+# The published adapter has a hash-pinned final CRLF byte sequence.
+audit/compare_dumps.py -text
