@@ -1,2 +1,4 @@
 # Keep checksum manifests byte-stable for GNU sha256sum on Windows clones.
 audit/results/MANIFEST.sha256 text eol=lf
+audit/results/analysis_J4K4.json text eol=lf
+audit/results/retrieval_J4K4.json text eol=lf
