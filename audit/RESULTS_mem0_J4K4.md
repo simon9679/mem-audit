@@ -108,6 +108,12 @@ repo" verification currently covers).
 | J4↔K4 dump-level symdiff, matched counts | `analysis_J4K4.json` | 2956 | `0778a9b979c995659113ee5d111af113c1b409f8fd468b7eecb0192fb6e2e6f8` | `codex/analyze_pair.py` |
 | J4↔K4 retrieval, pooled + per-question | `retrieval_J4K4.json` | — | `4d39ef1a3f3661fca0875742adabd74b28a2d5f377f614bda39d72d4b954530a` | `codex/analyze_retrieval.py` |
 
+Verify the published result files from the manifest directory:
+```bash
+cd audit/results
+sha256sum -c MANIFEST.sha256
+```
+
 Full run artifacts, per-session logs, frozen config, and the bundle-level SHA-256 manifest
 are recorded in `codex/J4K4_FINAL/README_J4K4.txt` and `codex/J4K4_FINAL/BUNDLE_MANIFEST.sha256`,
 pending a decision on whether that bundle is published as a repository release (not yet
