@@ -1,0 +1,2 @@
+# Keep checksum manifests byte-stable for GNU sha256sum on Windows clones.
+audit/results/MANIFEST.sha256 text eol=lf
