@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "metric": {
+    "path": "audit/symdiff_probe.py",
+    "sha256": "29c1b617486789c5ca69547483dba8420d5a9dae5434c3d82decf66ff8b5ccec",
+    "matching": "greedy one-to-one cosine; exact, 0.60, 0.72, 0.82",
+    "fact_text_field": "memory"
+  },
+  "inputs": {
+    "J4": {
+      "path": "runs\\J4\\dump_J4_p8.json",
+      "sha256": "4d76561911b6c30b8c6bc69e312270815557f5b31727a4ec70213589a57a6a51"
+    },
+    "K4": {
+      "path": "runs\\K4\\dump_K4_p8.json",
+      "sha256": "dc2d94be0e0956dc59cedd8d5cb2fcd6763922871fac22926b9243b8914dc012"
+    }
+  },
+  "comparisons": {
+    "J4_K4": {
+      "a_count": 228,
+      "b_count": 211,
+      "thresholds": {
+        "exact": {
+          "matched": 6,
+          "A": 228,
+          "B": 211,
+          "A_minus_B": 222,
+          "B_minus_A": 205,
+          "union": 433,
+          "symdiff": 427,
+          "symdiff_pct": 98.61,
+          "jaccard": 0.0139
+        },
+        "0.60": {
+          "matched": 183,
+          "A": 228,
+          "B": 211,
+          "A_minus_B": 45,
+          "B_minus_A": 28,
+          "union": 256,
+          "symdiff": 73,
+          "symdiff_pct": 28.52,
+          "jaccard": 0.7148
+        },
+        "0.72": {
+          "matched": 155,
+          "A": 228,
+          "B": 211,
+          "A_minus_B": 73,
+          "B_minus_A": 56,
+          "union": 284,
+          "symdiff": 129,
+          "symdiff_pct": 45.42,
+          "jaccard": 0.5458
+        },
+        "0.82": {
+          "matched": 108,
+          "A": 228,
+          "B": 211,
+          "A_minus_B": 120,
+          "B_minus_A": 103,
+          "union": 331,
+          "symdiff": 223,
+          "symdiff_pct": 67.37,
+          "jaccard": 0.3263
+        }
+      }
+    },
+    "J4_J4_positive_control": {
+      "a_count": 228,
+      "b_count": 228,
+      "thresholds": {
+        "exact": {
+          "matched": 228,
+          "A": 228,
+          "B": 228,
+          "A_minus_B": 0,
+          "B_minus_A": 0,
+          "union": 228,
+          "symdiff": 0,
+          "symdiff_pct": 0.0,
+          "jaccard": 1.0
+        },
+        "0.60": {
+          "matched": 228,
+          "A": 228,
+          "B": 228,
+          "A_minus_B": 0,
+          "B_minus_A": 0,
+          "union": 228,
+          "symdiff": 0,
+          "symdiff_pct": 0.0,
+          "jaccard": 1.0
+        },
+        "0.72": {
+          "matched": 228,
+          "A": 228,
+          "B": 228,
+          "A_minus_B": 0,
+          "B_minus_A": 0,
+          "union": 228,
+          "symdiff": 0,
+          "symdiff_pct": 0.0,
+          "jaccard": 1.0
+        },
+        "0.82": {
+          "matched": 228,
+          "A": 228,
+          "B": 228,
+          "A_minus_B": 0,
+          "B_minus_A": 0,
+          "union": 228,
+          "symdiff": 0,
+          "symdiff_pct": 0.0,
+          "jaccard": 1.0
+        }
+      }
+    }
+  }
+}
