@@ -355,7 +355,7 @@ Only the file name and SHA-256 matter for verification — the directory is inci
 | H2↔I2 symdiff, prefix, retrieval, amplification (2.0.17) | `<2X>/analysis_H2I2.json` | 2901 | `f69a0d549f5d01d6f3cba625ac869d50190efe933a2c1f7ea174f229d222b6ff` | `analyze_hi_2x.py` |
 | 20 questions (frozen) | `audit/retrieval_questions.json` (in repo) | 1282 | `6513cf5233fa689d624ae90cc96ea32895bee35c4070b0a2410b7b16857e62c6` | fixed before runs |
 | the metric itself (unchanged in every comparison) | `audit/symdiff_probe.py` (in repo) | 5342 | `29c1b617486789c5ca69547483dba8420d5a9dae5434c3d82decf66ff8b5ccec` | — |
-| dump-object adapter | `audit/compare_dumps.py` (in repo) | 1611 | `d4db5a992651e6283a777a80ae9e31bc16e6ec69eb60f17231b9e53b950cf288` | — |
+| dump-object adapter | `audit/compare_dumps.py` (in repo) | 2494 | `edf88a2677f6b7024d3c015c9b800869555f01f239d9418feea11cb2df4d0020` | — |
 
 All SHA-256 above verify with `sha256sum <file>`. One caveat on the questions
 file: `PREREG_mem0_retrieval.md` registered `5e51de93…`, which is the hash of the
