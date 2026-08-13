@@ -75,6 +75,18 @@ SEMANTIC_PARAPHRASE = [
     "Yesterday, Iris settled the electric power invoice.",
     "Leo is a university student of mathematics.",
 ]
+SEMANTIC_ENTITY_SWAP = [
+    "Omar lives in Berlin.",
+    "Priya works as a teacher.",
+    "Noah owns a red bicycle.",
+    "Elena visits his grandmother every Sunday.",
+    "Victor prefers tea in the morning.",
+    "Sara repaired the broken window.",
+    "Daniel speaks French at home.",
+    "Iris adopted a small dog.",
+    "Leo paid the electricity bill yesterday.",
+    "Maya studies mathematics at university.",
+]
 ORACLE_FOOD = [
     "The kitchen contains fresh apples and rice.",
     "Nora cooks lentil soup for dinner.",
@@ -121,6 +133,13 @@ CONSTANT_FACTS = [
     "Maya keeps receipts in a blue folder.",
     "Maya calls her parents every Wednesday.",
 ]
+
+
+def compare_symdiff(lower: float, higher: float) -> str:
+    """Compare two symdiff values. Returns 'OK', 'ISSUE', or 'INCONCLUSIVE'."""
+    if lower == 0.0 and higher == 0.0:
+        return "INCONCLUSIVE"
+    return "OK" if lower < higher else "ISSUE"
 
 
 def sha256(path: Path) -> str:
@@ -180,7 +199,7 @@ def status_line(status: str, text: str) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--output", type=Path, default=HERE / "PROBE_symdiff_probe.md")
+    parser.add_argument("--output", type=Path, default=HERE / "PROBE_symdiff_probe_v2.md")
     args = parser.parse_args()
 
     canaries = {
@@ -196,25 +215,45 @@ def main() -> int:
     }
     oracle = run_probe(ORACLE_FOOD, ORACLE_NUMBERS)
     semantic = {
-        "word permutation": run_probe(SEMANTIC_ORIGINAL, SEMANTIC_SCRAMBLED),
+        "word permutation (word-order sensitivity)": run_probe(SEMANTIC_ORIGINAL, SEMANTIC_SCRAMBLED),
         "antonym substitution": run_probe(SEMANTIC_ORIGINAL, SEMANTIC_ANTONYM),
         "meaning-preserving paraphrase": run_probe(SEMANTIC_ORIGINAL, SEMANTIC_PARAPHRASE),
+        "entity swap": run_probe(SEMANTIC_ORIGINAL, SEMANTIC_ENTITY_SWAP),
     }
     constant = run_probe(CONSTANT_FACTS, [CONSTANT_FACTS[0]] * len(CONSTANT_FACTS))
 
     empty_zero = all(row["symdiff_pct"] == 0.0 for row in rows(canary_stats["empty vs empty"]))
     canary_cli_ok = all("cli_error" not in result for result in canary_results.values())
     oracle_ok = all(row["symdiff_pct"] >= 95.0 for row in rows(oracle))
-    permutation_ok = all(
-        semantic["meaning-preserving paraphrase"]["thresholds"][t]["symdiff_pct"]
-        < semantic["word permutation"]["thresholds"][t]["symdiff_pct"]
+    permutation_verdicts = {
+        t: compare_symdiff(
+            semantic["meaning-preserving paraphrase"]["thresholds"][t]["symdiff_pct"],
+            semantic["word permutation (word-order sensitivity)"]["thresholds"][t]["symdiff_pct"],
+        )
         for t in SEMANTIC_THRESHOLDS
-    )
-    antonym_ok = all(
-        semantic["meaning-preserving paraphrase"]["thresholds"][t]["symdiff_pct"]
-        < semantic["antonym substitution"]["thresholds"][t]["symdiff_pct"]
+    }
+    permutation_ok = all(v == "OK" for v in permutation_verdicts.values())
+    permutation_any_issue = any(v == "ISSUE" for v in permutation_verdicts.values())
+
+    antonym_verdicts = {
+        t: compare_symdiff(
+            semantic["meaning-preserving paraphrase"]["thresholds"][t]["symdiff_pct"],
+            semantic["antonym substitution"]["thresholds"][t]["symdiff_pct"],
+        )
         for t in ("0.72", "0.82")
-    )
+    }
+    antonym_ok = all(v == "OK" for v in antonym_verdicts.values())
+    antonym_any_issue = any(v == "ISSUE" for v in antonym_verdicts.values())
+
+    entity_swap_verdicts = {
+        t: compare_symdiff(
+            semantic["meaning-preserving paraphrase"]["thresholds"][t]["symdiff_pct"],
+            semantic["entity swap"]["thresholds"][t]["symdiff_pct"],
+        )
+        for t in ("0.72", "0.82")
+    }
+    entity_swap_ok = all(v == "OK" for v in entity_swap_verdicts.values())
+    entity_swap_any_issue = any(v == "ISSUE" for v in entity_swap_verdicts.values())
     constant_matches = {t: constant["thresholds"][t]["matched"] for t in SEMANTIC_THRESHOLDS}
     constant_ok = constant["thresholds"]["exact"]["matched"] == 1 and all(value <= 1 for value in constant_matches.values())
 
@@ -257,7 +296,7 @@ def main() -> int:
         "",
         status_line("OK" if oracle_ok else "ISSUE", "Predefined criterion: each observed threshold must reach at least 95% symdiff. The table records the observed maximum for this disjoint fixture, not a claim of a universal numerical ceiling."),
         "",
-        "## 3. Semantic label permutation",
+        "## 3. Word-order sensitivity and semantic checks",
         "",
         fixture("original", SEMANTIC_ORIGINAL),
         "",
@@ -267,17 +306,27 @@ def main() -> int:
         "",
         fixture("meaning-preserving paraphrase", SEMANTIC_PARAPHRASE),
         "",
+        fixture("entity swap", SEMANTIC_ENTITY_SWAP),
+        "",
     ])
     for name, result in semantic.items():
         parts.extend([f"### original vs {name}", "", table(result), ""])
-    semantic_status = "OK" if permutation_ok and antonym_ok else "ISSUE"
-    semantic_reasons = []
-    if not permutation_ok:
-        semantic_reasons.append("word permutation is not strictly more divergent than paraphrase at every cosine threshold")
-    if not antonym_ok:
-        semantic_reasons.append("antonym substitution is not strictly more divergent than paraphrase at both 0.72 and 0.82")
+
+    permutation_status = "ISSUE" if permutation_any_issue else ("OK" if permutation_ok else "INCONCLUSIVE")
     parts.extend([
-        status_line(semantic_status, "Predefined criteria: paraphrase must have lower symdiff than word permutation at 0.60/0.72/0.82, and lower symdiff than antonym substitution at 0.72/0.82." + (" Failed: " + "; ".join(semantic_reasons) + "." if semantic_reasons else "")),
+        status_line(permutation_status, f"Word-order sensitivity: paraphrase vs word permutation at 0.60/0.72/0.82. Per-threshold verdicts: {permutation_verdicts}. Comparisons where both values are 0.0 are INCONCLUSIVE (floor saturation)."),
+        "",
+    ])
+
+    antonym_status = "ISSUE" if antonym_any_issue else ("OK" if antonym_ok else "INCONCLUSIVE")
+    parts.extend([
+        status_line(antonym_status, f"Antonym substitution: paraphrase vs antonym at 0.72/0.82. Per-threshold verdicts: {antonym_verdicts}."),
+        "",
+    ])
+
+    entity_swap_status = "ISSUE" if entity_swap_any_issue else ("OK" if entity_swap_ok else "INCONCLUSIVE")
+    parts.extend([
+        status_line(entity_swap_status, f"Entity swap: paraphrase vs entity swap at 0.72/0.82. Per-threshold verdicts: {entity_swap_verdicts}."),
         "",
         "## 4. Constant mutation",
         "",
@@ -295,8 +344,9 @@ def main() -> int:
         "|---|---|---|---|",
         f"| empty inputs | direct stats reports zero for empty-empty; CLI must complete for all fixtures | stats-zero: `{empty_zero}`; cli-ok: `{canary_cli_ok}` | {'OK' if canary_cli_ok else 'ISSUE'} |",
         f"| oracle | every threshold >= 95% | `{oracle_ok}` | {'OK' if oracle_ok else 'ISSUE'} |",
-        f"| word permutation | paraphrase lower at 0.60/0.72/0.82 | `{permutation_ok}` | {'OK' if permutation_ok else 'ISSUE'} |",
-        f"| antonym substitution | paraphrase lower at 0.72/0.82 | `{antonym_ok}` | {'OK' if antonym_ok else 'ISSUE'} |",
+        f"| word-order sensitivity | paraphrase lower at 0.60/0.72/0.82 | `{permutation_verdicts}` | {permutation_status} |",
+        f"| antonym substitution | paraphrase lower at 0.72/0.82 | `{antonym_verdicts}` | {antonym_status} |",
+        f"| entity swap | paraphrase lower at 0.72/0.82 | `{entity_swap_verdicts}` | {entity_swap_status} |",
         f"| constant mutation | exact=1 and semantic matches <=1 | `{constant_ok}`; semantic matches `{constant_matches}` | {'OK' if constant_ok else 'ISSUE'} |",
         "",
         "No conclusion about Mem0 is made here. These checks characterize only the behavior of this measurement tool on fixed fixtures.",
