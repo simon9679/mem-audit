@@ -91,11 +91,17 @@ comparison. `compare_dumps.py` reads a `text` field; Mem0 2.x dumps of this shap
 facts under `memory`, so every extracted string was silently empty, and the "7.46 %"
 was an artifact of comparing two lists of blank strings of different lengths, not of
 comparing content. This was caught before being reported as a finding, not after.
-`audit/compare_dumps.py` should be treated as **validated for `text`-keyed dumps only**;
-a schema check that fails loudly on an unrecognized shape, rather than silently
-substituting an empty string, is a needed fix and is not yet made in the committed
-adapter (see `codex/analyze_pair.py` for the workaround used to produce this file's
-numbers).
+`audit/compare_dumps.py` was, at the time of this run, **validated for `text`-keyed
+dumps only**, and the numbers in this file were produced through the workaround in
+`codex/analyze_pair.py`.
+
+**Status update (post-run, PR #21).** The loud schema check called for above is now
+in the committed adapter: `compare_dumps.py` accepts either a `text` or a `memory`
+field, and raises on a fact object that has neither — exiting with code 2 instead of
+substituting an empty string. The numbers in this file are unchanged and were **not**
+recomputed through the fixed adapter; they remain as produced by
+`codex/analyze_pair.py`. The fix removes the failure mode for future comparisons; it
+is not applied retroactively to these results.
 
 ## Manifest (number → file → SHA-256)
 
@@ -103,10 +109,23 @@ Raw data outside the repository (produced locally; not yet published as a releas
 package — see the note on `mem-audit-release` in `AUDIT_mem0.md` §7 regarding what "in
 repo" verification currently covers).
 
-| numbers | file | size (B) | SHA-256 | produced by |
+Both files are published in `audit/results/`. Two hashes are recorded per file: the
+**as-committed** value, which is what `MANIFEST.sha256` checks and what a third party
+should reproduce, and the **as-produced** value, which is what the run actually wrote
+on a Windows working copy before `.gitattributes` pinned line endings. Content is
+identical; the as-produced hash is the CRLF encoding of the same bytes
+(`sha256(raw.replace(b'\n', b'\r\n'))`). The as-produced values are kept rather than
+deleted because they are the ones the original run emitted.
+
+| numbers | file | as-committed (LF) | as-produced (CRLF) | produced by |
 |---|---|---|---|---|
-| J4↔K4 dump-level symdiff, matched counts | `analysis_J4K4.json` | 2956 | `0778a9b979c995659113ee5d111af113c1b409f8fd468b7eecb0192fb6e2e6f8` | `codex/analyze_pair.py` |
-| J4↔K4 retrieval, pooled + per-question | `retrieval_J4K4.json` | — | `4d39ef1a3f3661fca0875742adabd74b28a2d5f377f614bda39d72d4b954530a` | `codex/analyze_retrieval.py` |
+| J4↔K4 dump-level symdiff, matched counts | `audit/results/analysis_J4K4.json`, 2835 B | `4a522f4e696af40fd88bc1887ae5d7102c24cffebeec4ba26a18f1ce77ad539b` | 2956 B, `0778a9b979c995659113ee5d111af113c1b409f8fd468b7eecb0192fb6e2e6f8` | `codex/analyze_pair.py` |
+| J4↔K4 retrieval, pooled + per-question | `audit/results/retrieval_J4K4.json`, 4903 B | `b24c714b841e8abdb291be8a36e4547737804f620f196d5d74554881ec272da7` | 5035 B, `4d39ef1a3f3661fca0875742adabd74b28a2d5f377f614bda39d72d4b954530a` | `codex/analyze_retrieval.py` |
+
+The same CRLF encoding explains `inputs.questions_sha256` = `4daba336…` inside
+`retrieval_J4K4.json`, which does not match the `6513cf52…` recorded for
+`audit/retrieval_questions.json` in `AUDIT_mem0.md` §7. Same file, same content, two
+line-ending encodings. See the three-hash table in §7.
 
 Verify the published result files from the manifest directory:
 ```bash

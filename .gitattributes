@@ -5,3 +5,9 @@ audit/results/retrieval_J4K4.json text eol=lf
 
 # The published adapter has a hash-pinned final CRLF byte sequence.
 audit/compare_dumps.py -text
+
+# Hash-pinned by file bytes in AUDIT_mem0.md §7. Without an eol pin a default
+# Windows checkout rewrites these to CRLF and the published sha256 no longer
+# matches — the failure that produced the duplicate hashes documented in §7.
+audit/retrieval_questions.json text eol=lf
+audit/symdiff_probe.py text eol=lf
