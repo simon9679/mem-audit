@@ -1,0 +1,30 @@
+{
+  "finish_reason": "stop",
+  "arm": "MEMORY",
+  "index": 2,
+  "raw_response": {
+    "usage": {
+      "completion_tokens": 134,
+      "prompt_tokens": 302,
+      "total_tokens": 436,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 106,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      }
+    },
+    "time_info": {
+      "created": 1786438804.1937058,
+      "queue_time": 0.056150282999999995,
+      "prompt_time": 0.024530690000000008,
+      "completion_time": 0.054134558,
+      "total_time": 0.13695359230041504
+    },
+    "model": "cerebras/gpt-oss-120b"
+  }
+}
