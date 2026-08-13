@@ -314,12 +314,39 @@ unestablished cause.
   measured here — it needs a within-dump near-duplicate count on the raw dumps, which
   has not been run. Effects on the loosest threshold (0.60) are the largest; `exact`
   is unaffected by construction.
-- **The metric's fuller self-validation is not yet published.** A four-check
-  falsification of `symdiff_probe.py` itself (canary / oracle / semantic label
-  permutation / constant mutation) exists but is not in this repository, so its
-  verdicts are not citable here and its semantic-permutation result in particular is
-  **not** reflected in the caveats above. Until it is published, treat the cosine
-  columns as less established than `exact`.
+- **The metric's self-validation is published** in four documents in this
+  repository: the original run (`PROBE_symdiff_probe.md`, 2026-08-10, commit
+  `7271912`), its review (`PROBE_symdiff_probe_REVIEW.md`), the pre-registration
+  of the entity-swap check (`PREREG_metric_entity_swap.md`), and the v2 run with
+  the INCONCLUSIVE fix and entity-swap fixture (`PROBE_symdiff_probe_v2.md`,
+  2026-08-13). Five checks were run; verdicts:
+  - **Canary / degenerate input:** ISSUE — `stats()` handles empties correctly
+    but the CLI crashes on empty embeddings. Does not affect this audit (all
+    compared dumps have 18+ facts).
+  - **Oracle / maximum probe:** OK — disjoint food-vs-numbers fixtures reach
+    100% symdiff at every threshold.
+  - **Word-order sensitivity (originally "semantic label permutation"):**
+    ISSUE at 0.82 (paraphrase more divergent than word permutation); floor
+    saturation at 0.60 and 0.72 (both 0.00, marked INCONCLUSIVE). The fixture
+    tests word-order sensitivity, not meaning discrimination — the scrambled set
+    shares the exact word multiset with the original in 10/10 pairs. The 0.82
+    result is a correct property of sentence embeddings (Sinha et al. 2021),
+    not a metric defect. See `PROBE_symdiff_probe_REVIEW.md`.
+  - **Antonym substitution:** OK at 0.72 (0.00 vs 18.18) and 0.82 (18.18 vs
+    75.00) — meaning-destroying negation is more divergent than paraphrase.
+    This is the check that validates meaning discrimination.
+  - **Entity swap:** OK at 0.72 (0.00 vs 88.89) and 0.82 (18.18 vs 100.00) —
+    cyclic subject permutation is well-separated from paraphrase. Prediction B
+    from PREREG confirmed: MiniLM's contrastive NLI/STS training provides
+    entity sensitivity.
+  - **Constant mutation:** ISSUE at 0.60 (4 semantic matches instead of ≤1) —
+    this is the matching-capacity defect described in the bullet above; exact
+    threshold is correct (1 match). The 0.60 column in §4 tables is the one
+    most affected.
+  The cosine columns (0.60, 0.72, 0.82) are now established for meaning
+  discrimination (antonym and entity-swap checks pass) but the 0.60 threshold
+  remains the least reliable due to both floor saturation and constant-mutation
+  capacity effects.
 - **Protocol steps 3–6 not performed.** A full end-to-end evaluation (questions →
   answerer model → LLM judge over Mem0) was not run: it needs a large call volume the
   free tier's daily budget does not allow (§3.3). The zero-quota retrieval test (§4)
