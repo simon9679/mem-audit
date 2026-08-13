@@ -345,8 +345,11 @@ unestablished cause.
     most affected.
   The cosine columns (0.60, 0.72, 0.82) are now established for meaning
   discrimination (antonym and entity-swap checks pass) but the 0.60 threshold
-  remains the least reliable due to both floor saturation and constant-mutation
-  capacity effects.
+  remains the least reliable for two measured reasons, both biasing symdiff
+  downward: entity swap at 0.60 yields only 46.15 % symdiff (7 of 10 matched)
+  whereas 0.72 and 0.82 give 88.89 % and 100 %, so a single-name substitution
+  is poorly separated at this threshold; and constant mutation at 0.60 matches
+  4 semantically instead of ≤1, inflating `matched` and suppressing divergence.
 - **Protocol steps 3–6 not performed.** A full end-to-end evaluation (questions →
   answerer model → LLM judge over Mem0) was not run: it needs a large call volume the
   free tier's daily budget does not allow (§3.3). The zero-quota retrieval test (§4)
