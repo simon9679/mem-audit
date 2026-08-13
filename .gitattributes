@@ -16,3 +16,11 @@ audit/PROBE_symdiff_probe.md text eol=lf
 audit/PROBE_symdiff_probe_v2.md text eol=lf
 audit/PREREG_metric_entity_swap.md text eol=lf
 audit/PROBE_symdiff_probe_REVIEW.md text eol=lf
+
+# Canary redacted verdicts — hash-pinned by MANIFEST.sha256.
+audit/canary/raw_redacted/** text eol=lf
+audit/canary/raw_redacted/MANIFEST.sha256 text eol=lf
+audit/canary/recompute_canary_ci.py text eol=lf
+audit/canary/redact_canary.py text eol=lf
+audit/canary/CANARY_FINAL.json text eol=lf
+audit/canary/FINDING_canary_ci_mismatch.md text eol=lf

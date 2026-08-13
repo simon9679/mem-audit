@@ -1,0 +1,213 @@
+{
+  "schema": 1,
+  "status": "COMPLETE",
+  "inputs": {
+    "config_sha256": "3a653f2cee142af76ab780a2a92acad7d5878c3bf989dbf0b9c7bc4b1cae55bf",
+    "questions_sha256": "4daba3365a270926e3ee13a2084b78755c54081af89c6de9988bff197986067d",
+    "dataset_sha256": "f30698e87fddaeff51270a666c654da604f487a3456ec60d2b6ae08a6fecd420",
+    "j4_store": "<J4_STORE>",
+    "memory_artifact": "J4",
+    "retrieval_contexts_sha256": "5676f0963c91e6e833afaac82e3fcde6633896f1a9bdcf84b2540736a11423f6",
+    "question_count": 20
+  },
+  "answerer_and_judge": {
+    "model": "cerebras/gpt-oss-120b",
+    "temperature": 0,
+    "max_tokens": 4000,
+    "reasoning_effort": "low"
+  },
+  "minimum_interval_seconds": 4.1,
+  "threshold": {
+    "min_delta_correct": 8,
+    "max_no_memory_correct": 4
+  },
+  "overall": {
+    "memory_correct": 11,
+    "no_memory_correct": 3,
+    "delta_correct": 8,
+    "automatic_verdict": "PASS"
+  },
+  "groups": {
+    "answerable": {
+      "n": 17,
+      "memory_correct": 8,
+      "no_memory_correct": 0
+    },
+    "abstention": {
+      "n": 3,
+      "memory_correct": 3,
+      "no_memory_correct": 3
+    }
+  },
+  "paired_outcomes": [
+    {
+      "index": 1,
+      "group": "answerable",
+      "memory_verdict": "INCORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 0,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 2,
+      "group": "answerable",
+      "memory_verdict": "CORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 1,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 3,
+      "group": "answerable",
+      "memory_verdict": "INCORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 0,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 4,
+      "group": "answerable",
+      "memory_verdict": "INCORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 0,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 5,
+      "group": "abstention",
+      "memory_verdict": "ABSTAIN_CORRECT",
+      "no_memory_verdict": "ABSTAIN_CORRECT",
+      "memory_correct": 1,
+      "no_memory_correct": 1
+    },
+    {
+      "index": 6,
+      "group": "answerable",
+      "memory_verdict": "INCORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 0,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 7,
+      "group": "answerable",
+      "memory_verdict": "INCORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 0,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 8,
+      "group": "answerable",
+      "memory_verdict": "INCORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 0,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 9,
+      "group": "answerable",
+      "memory_verdict": "CORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 1,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 10,
+      "group": "answerable",
+      "memory_verdict": "INCORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 0,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 11,
+      "group": "abstention",
+      "memory_verdict": "ABSTAIN_CORRECT",
+      "no_memory_verdict": "ABSTAIN_CORRECT",
+      "memory_correct": 1,
+      "no_memory_correct": 1
+    },
+    {
+      "index": 12,
+      "group": "answerable",
+      "memory_verdict": "CORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 1,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 13,
+      "group": "answerable",
+      "memory_verdict": "INCORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 0,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 14,
+      "group": "abstention",
+      "memory_verdict": "CORRECT",
+      "no_memory_verdict": "CORRECT",
+      "memory_correct": 1,
+      "no_memory_correct": 1
+    },
+    {
+      "index": 15,
+      "group": "answerable",
+      "memory_verdict": "CORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 1,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 16,
+      "group": "answerable",
+      "memory_verdict": "CORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 1,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 17,
+      "group": "answerable",
+      "memory_verdict": "CORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 1,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 18,
+      "group": "answerable",
+      "memory_verdict": "CORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 1,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 19,
+      "group": "answerable",
+      "memory_verdict": "INCORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 0,
+      "no_memory_correct": 0
+    },
+    {
+      "index": 20,
+      "group": "answerable",
+      "memory_verdict": "CORRECT",
+      "no_memory_verdict": "INCORRECT",
+      "memory_correct": 1,
+      "no_memory_correct": 0
+    }
+  ],
+  "bootstrap": {
+    "method": "paired bootstrap percentile",
+    "seed": 20260811,
+    "samples": 10000,
+    "ci95_delta_correct_count": [
+      2,
+      13
+    ]
+  }
+}
