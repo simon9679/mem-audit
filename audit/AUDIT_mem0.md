@@ -401,12 +401,12 @@ Only the file name and SHA-256 matter for verification — the directory is inci
 | I facts (6000) | `<RESUME>/dump_I_p8.json` | 18282 | `86c7bf2f7c84ee6295f67a17236d9990218a330e76aca83470fd0226721515ad` | `window_once.py` (mem0_resume) |
 | H per-session instrumentation | `<RESUME>/state_H.json` | 8105 | `7924e99c8688a83ff1fc83a64ad85349f094977fc129b680b04e87ea303dad8c` | `window_once.py` |
 | I per-session instrumentation | `<RESUME>/state_I.json` | 8105 | `9f624dcfa2d8afd22f05b2ea3b266eb3630f1bd006bdc12ef5dcbf671697632d` | `window_once.py` |
-| H↔I symdiff, prefix, retrieval, amplification | `audit/results/analysis_HI.json` (in repo) | 2932 | `1bec9e4e1c09f912fe52fba38adbe3e1c01f51e93677dbc645778017791474dd` | `analyze_hi.py` |
+| H↔I symdiff, prefix, retrieval, amplification | `audit/results/analysis_HI.json` (in repo) | 2769 | `4845c051eb5b175a74207cc8e31fd53057d9d3b6df65ded6aeabae84f50bff90` | `analyze_hi.py` |
 | H2 facts (2.0.17) | `<2X>/dump_H2_p8.json` | 11123 | `4282711266d1d33c6de55d4127ff40555b991fe2d3cab676640cb39a423ca4c5` | `run_pair_2x.py` (mem0_resume_2x) |
 | I2 facts (2.0.17) | `<2X>/dump_I2_p8.json` | 12092 | `697f92f2b4ba9e3046a403da00cf2494f5f0d9ad1dbaea59e6fc7c0d8dcff864` | `run_pair_2x.py` |
 | H2 per-session + call-count (2.0.17) | `<2X>/state_H2.json` | 5363 | `1769c3bbcb62e952979e3a821afc47eebc1010c823c63f0fb825df42921d1299` | `run_pair_2x.py` |
 | I2 per-session + call-count (2.0.17) | `<2X>/state_I2.json` | 5361 | `0211c4dfd03c53f03036139042baf4dffa747c233c8c40758454ae71400f15b9` | `run_pair_2x.py` |
-| H2↔I2 symdiff, prefix, retrieval, amplification (2.0.17) | `audit/results/analysis_H2I2.json` (in repo) | 2901 | `f69a0d549f5d01d6f3cba625ac869d50190efe933a2c1f7ea174f229d222b6ff` | `analyze_hi_2x.py` |
+| H2↔I2 symdiff, prefix, retrieval, amplification (2.0.17) | `audit/results/analysis_H2I2.json` (in repo) | 2738 | `89fd5c373b7f59141502638571bd43a04653a43f137b8793ec6ec7baa1760d3b` | `analyze_hi_2x.py` |
 | 20 questions (frozen) | `audit/retrieval_questions.json` (in repo) | 1282 | `6513cf5233fa689d624ae90cc96ea32895bee35c4070b0a2410b7b16857e62c6` | fixed before runs |
 | the metric itself (unchanged in every comparison) | `audit/symdiff_probe.py` (in repo) | 5342 | `29c1b617486789c5ca69547483dba8420d5a9dae5434c3d82decf66ff8b5ccec` | — |
 | dump-object adapter | `audit/compare_dumps.py` (in repo) | 2494 | `edf88a2677f6b7024d3c015c9b800869555f01f239d9418feea11cb2df4d0020` | — |
@@ -433,23 +433,44 @@ pre-registration files are **not edited** to point at the LF hash — a preregis
 that gets corrected after the fact stops being one. The discrepancy is documented
 here instead.
 
-**`analysis_HI.json` and `analysis_H2I2.json` have two hashes each** — the §7
-table records CRLF originals (from the Windows dump directories), while the
-in-repo copies are LF-normalized by `.gitattributes`. Content is identical.
+The `analysis_HI.json` and `analysis_H2I2.json` rows above show the as-committed
+(LF) values. The as-produced (CRLF) hashes from the original Windows runs are:
 
-| file | CRLF hash (§7 table) | LF hash (in-repo / MANIFEST) |
-|---|---|---|
-| `analysis_HI.json` | `1bec9e4e…` | `4845c051…` |
-| `analysis_H2I2.json` | `f69a0d54…` | `89fd5c37…` |
+| numbers | file | as-committed (LF) | as-produced (CRLF) | produced by |
+|---|---|---|---|---|
+| H↔I symdiff, prefix, retrieval, amplification | `audit/results/analysis_HI.json`, 2769 B | `4845c051eb5b175a74207cc8e31fd53057d9d3b6df65ded6aeabae84f50bff90` | 2932 B, `1bec9e4e1c09f912fe52fba38adbe3e1c01f51e93677dbc645778017791474dd` | `analyze_hi.py` |
+| H2↔I2 symdiff, prefix, retrieval, amplification (2.0.17) | `audit/results/analysis_H2I2.json`, 2738 B | `89fd5c373b7f59141502638571bd43a04653a43f137b8793ec6ec7baa1760d3b` | 2901 B, `f69a0d549f5d01d6f3cba625ac869d50190efe933a2c1f7ea174f229d222b6ff` | `analyze_hi_2x.py` |
 
-Reproduce the CRLF hash from the committed file:
-`sha256(open(f,'rb').read().replace(b'\n', b'\r\n'))`.
+Reproduce: `sha256(open(f,'rb').read().replace(b'\n', b'\r\n'))`.
 
 `audit/compare_dumps.py` extracts fact texts from the object-shaped dumps before
 calling the unchanged metric. Reproduce a comparison, e.g. H↔I:
 `python audit/compare_dumps.py <RESUME>/dump_H_p8.json <RESUME>/dump_I_p8.json`
 Full H↔I analysis (symdiff + prefix + retrieval + amplification):
 `python audit/analyze_hi.py`.
+
+**Not published.** The following scripts live in the run working tree
+(`codex/` or the run output directory) and are not included in the repository:
+`codex/analyze_pair.py`, `codex/analyze_retrieval.py`, `report.py`,
+`config_j4k4.json`, `run_log.json`. Their outputs (the `audit/results/*.json`
+files) are published and hash-pinned above.
+
+## 8. Canary control
+
+A paired memory-vs-no-memory answering test on 20 frozen questions, using the
+J4 memory artifact. The answerer+judge model (`cerebras/gpt-oss-120b`,
+`temperature=0`, `reasoning_effort=low`) scored each question with and without
+retrieved memory context.
+
+- **delta_correct = 8** (memory 11, no-memory 3), automatic verdict **PASS**
+  (threshold: `min_delta_correct ≥ 8`, `max_no_memory_correct ≤ 4`).
+- The published 95 % bootstrap CI **[2, 13]** does not reproduce: paired
+  recomputation (seed 20260811, 10 000 samples) yields **[4, 12]** across all
+  eight implementations tested. The published interval is wider on both sides,
+  so no conclusion is inflated. Finding:
+  [`audit/canary/FINDING_canary_ci_mismatch.md`](audit/canary/FINDING_canary_ci_mismatch.md).
+- Raw redacted verdicts, the recomputation script, and the allowlist redactor:
+  [`audit/canary/`](audit/canary/).
 
 ---
 
