@@ -346,6 +346,11 @@ result tables, and the harness code — lives in
   A separate J4/K4 configuration check with `max_tokens=4000` and
   `reasoning_effort=low` also found strong run-to-run divergence
   ([`audit/RESULTS_mem0_J4K4.md`](audit/RESULTS_mem0_J4K4.md)).
+- **Canary control:** a paired memory-vs-no-memory answering test on 20
+  questions, delta_correct = 8 out of 20, verdict **PASS**. The published
+  bootstrap CI [2, 13] does not reproduce (recomputed: [4, 12]); the published
+  interval is wider, so no conclusion is inflated
+  ([`audit/canary/FINDING_canary_ci_mismatch.md`](audit/canary/FINDING_canary_ci_mismatch.md)).
 
 This is exactly the kind of drift `mem-audit` is meant to help you *see* after
 the fact — it doesn't prevent it, and per "What it does not do" above, it never
