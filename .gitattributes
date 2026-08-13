@@ -11,3 +11,5 @@ audit/compare_dumps.py -text
 # matches — the failure that produced the duplicate hashes documented in §7.
 audit/retrieval_questions.json text eol=lf
 audit/symdiff_probe.py text eol=lf
+audit/validate_symdiff_probe.py text eol=lf
+audit/PROBE_symdiff_probe.md text eol=lf
