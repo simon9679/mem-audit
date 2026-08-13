@@ -300,6 +300,26 @@ unestablished cause.
   continuous ones on this point. The resumable engine additionally refuses to
   checkpoint any session that did not make both LLM calls, so completeness here is
   stricter than "33 sessions ran."
+- **The metric has a known matching-capacity defect, and it biases *against* this
+  audit's conclusion.** `symdiff_probe.py` matches greedily one-to-one, so `matched`
+  for a given threshold is `min(|A|, #{j : sim(a, b_j) ≥ t})` when several entries of
+  `A` are near-identical: one semantic concept repeated `k` times consumes `k`
+  matching slots. Mem0 is ADD-only and does not reconcile contradictions
+  (mem0ai/mem0#4896, cited in §1), so near-duplicate facts within a single dump are
+  expected, not hypothetical. The direction is determinable without any fixture:
+  duplicate capacity can only **raise** `matched`, and a higher `matched` **lowers**
+  symdiff. So wherever this defect is active, the reported divergence is an
+  **under**-estimate, and the finding "two runs of one configuration diverge
+  substantially" cannot be an artifact of it. The magnitude of the effect is **not**
+  measured here — it needs a within-dump near-duplicate count on the raw dumps, which
+  has not been run. Effects on the loosest threshold (0.60) are the largest; `exact`
+  is unaffected by construction.
+- **The metric's fuller self-validation is not yet published.** A four-check
+  falsification of `symdiff_probe.py` itself (canary / oracle / semantic label
+  permutation / constant mutation) exists but is not in this repository, so its
+  verdicts are not citable here and its semantic-permutation result in particular is
+  **not** reflected in the caveats above. Until it is published, treat the cosine
+  columns as less established than `exact`.
 - **Protocol steps 3–6 not performed.** A full end-to-end evaluation (questions →
   answerer model → LLM judge over Mem0) was not run: it needs a large call volume the
   free tier's daily budget does not allow (§3.3). The zero-quota retrieval test (§4)
@@ -328,8 +348,12 @@ Registered before each run; not edited. Misses kept.
 Raw data files are outside the repository (withheld-dataset derivatives). SHA-256
 computed once at run completion; files unchanged since. Code files
 (`symdiff_probe.py`, `compare_dumps.py`, `mem0_resume.py`, `analyze_hi.py`, `window_once.py`,
-`retrieval_questions.json`, …) are committed in this directory; git guarantees their
-integrity.
+`retrieval_questions.json`, …) are committed in this directory. Git guarantees their
+*content*, not the byte representation in your working tree: on a checkout that
+rewrites line endings, a file with unchanged content produces a different SHA-256.
+The files whose byte hashes appear below are pinned to LF in `.gitattributes` so the
+published hashes are reproducible on any platform; see the note after the table for
+the hashes that were published before that pin existed.
 
 Full SHA-256 (64 hex). `<DUMPS>`, `<MAXTOKENS>`, `<RESUME>`, `<2X>` are local
 output directories used by the runs (outside the repository; substitute your own).
@@ -357,11 +381,27 @@ Only the file name and SHA-256 matter for verification — the directory is inci
 | the metric itself (unchanged in every comparison) | `audit/symdiff_probe.py` (in repo) | 5342 | `29c1b617486789c5ca69547483dba8420d5a9dae5434c3d82decf66ff8b5ccec` | — |
 | dump-object adapter | `audit/compare_dumps.py` (in repo) | 2494 | `edf88a2677f6b7024d3c015c9b800869555f01f239d9418feea11cb2df4d0020` | — |
 
-All SHA-256 above verify with `sha256sum <file>`. One caveat on the questions
-file: `PREREG_mem0_retrieval.md` registered `5e51de93…`, which is the hash of the
-*question list content* (`sha256(json.dumps(list))`), not of the file bytes — it
-proves the 20 questions were fixed before the run; the file-bytes hash above is
-`6513cf52…`. Both are correct; they attest different things.
+All SHA-256 above verify with `sha256sum <file>` **on an LF checkout**. Clone
+normally and the `.gitattributes` pins make this automatic; if you have an older
+clone made before those pins, run `git config core.autocrlf false` and re-checkout
+before comparing, or the in-repo files will hash differently with identical content.
+
+**Three published hashes exist for the same 20-question file.** All three are correct
+and none supersedes the others; they attest different things and are recorded here
+rather than reconciled into one.
+
+| value | what it is | where it was published |
+|---|---|---|
+| `6513cf52…` | file bytes, LF | this table (`audit/retrieval_questions.json`, 1282 B) |
+| `5e51de93…` | question-list *content*, `sha256(json.dumps(list))` | `PREREG_mem0_retrieval.md` — attests the 20 questions were fixed before the run |
+| `4daba336…` | file bytes, CRLF — the same 1282-B content on a Windows checkout | `PREREG_J4K4.md` and `inputs.questions_sha256` in `audit/results/retrieval_J4K4.json` |
+
+`4daba336…` was recorded during the J4/K4 runs, on a Windows working copy, before
+`.gitattributes` pinned line endings. It is reproducible as
+`sha256(open(f,'rb').read().replace(b'\n', b'\r\n'))` over the committed file. The
+pre-registration files are **not edited** to point at the LF hash — a preregistration
+that gets corrected after the fact stops being one. The discrepancy is documented
+here instead.
 
 `audit/compare_dumps.py` extracts fact texts from the object-shaped dumps before
 calling the unchanged metric. Reproduce a comparison, e.g. H↔I:
