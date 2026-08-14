@@ -38,6 +38,9 @@ headline number reproduces from a frozen artifact. Files are grouped below by ro
   published CI [2, 13] does not reproduce (recomputed [4, 12], wider, so nothing inflated).
 - [`arena/`](arena/) — judge answer-position order effect, balanced within-run: **M1 = 7/20**
   cross-order vs **M2 = 0/20** same-order, verdict **INCONCLUSIVE**. Not an Arena-Hard (Bradley–Terry) audit.
+- [`FINDINGS_summary_vs_raw.md`](FINDINGS_summary_vs_raw.md) — five cases where an automated
+  summary disagreed with its own raw artifacts; a ten-bundle recount matched on every scientific
+  counter, so the disagreements are all in technical accounting, integrity metadata, and classifier logic.
 
 ## 4. Pre-registrations (committed before any number)
 

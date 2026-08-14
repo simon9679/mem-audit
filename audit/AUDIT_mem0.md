@@ -385,6 +385,12 @@ The files whose byte hashes appear below are pinned to LF in `.gitattributes` so
 published hashes are reproducible on any platform; see the note after the table for
 the hashes that were published before that pin existed.
 
+Why recompute from raw at all: five cases in this project had an automated summary disagree
+with its own raw artifacts — [`FINDINGS_summary_vs_raw.md`](FINDINGS_summary_vs_raw.md). None
+was in a measured value; all were in technical accounting, integrity metadata, or classifier
+logic. That is the reason headline numbers here are recomputed from raw and pinned by hash
+rather than read from a summary.
+
 Full SHA-256 (64 hex). `<DUMPS>`, `<MAXTOKENS>`, `<RESUME>`, `<2X>` are local
 output directories used by the runs (outside the repository; substitute your own).
 Only the file name and SHA-256 matter for verification — the directory is incidental.
@@ -489,6 +495,8 @@ cross-order pair (order swapped between passes) and one fresh same-order pair
   effect is neither confirmed nor withdrawn.
 - Full record, prereg, runner, raw judgments, and manifest:
   [`audit/arena/`](audit/arena/).
+- Four-stage narrative of this line — calibration, scoring, recount, balanced run:
+  [`audit/arena/README.md`](arena/README.md).
 
 **This is not an audit of Arena-Hard.** Arena-Hard judges each query in *both*
 orders and aggregates by Bradley–Terry, which cancels answer position by
