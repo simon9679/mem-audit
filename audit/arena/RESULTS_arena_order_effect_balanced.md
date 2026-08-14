@@ -33,14 +33,18 @@ candidate↔baseline flips (q05 baseline→candidate, q18 candidate→baseline).
   **neither confirmed nor withdrawn**, and the power limitation is recorded.
 
 ## What the run actually shows
-- The order effect on outcomes is **real and cleanly isolated.** With same-order stochasticity at
-  exactly zero (M2 = 0/20), the entire 7/20 cross-order instability is attributable to AB↔BA
-  **order**, not to judge randomness. Order changes the outcome for roughly one prompt in three.
+- The order effect on outcomes is **real**, and same-order noise was **not detected** at this
+  sample size. Zero observed is not zero probability: at n = 20 an observed M2 = 0/20 is compatible
+  with a true same-order disagreement rate of up to about 16% (95% Wilson upper bound 0.161; rule of
+  three 3/20 = 0.15). So the correct statement is that same-order noise does not *explain* the 7/20
+  cross-order pattern at this n — **not** that the entire 7/20 is attributable to order. Order changes
+  the outcome on roughly one prompt in three.
 - The **specific** point-4 mechanism — a *directional* drift toward ties under BA beyond chance —
   is **not confirmed** at this n. The fresh balanced run gives 4:1 (p = 0.375), where scoring_05's
   historical recovery gave a clean 5:0 (p = 0.0625). The one AB-side tie (q16) breaks the clean
   asymmetry; the direction is preserved (4 of 5 ties under BA) but the magnitude is not decisive.
-- Because M2 ≪ M1, the instability cannot be dismissed as noise; because M3 is not significant, the
+- Because no same-order disagreement was observed while cross-order disagreement occurred on 7 of 20
+  prompts, the instability cannot be dismissed as noise; because M3 is not significant, the
   directional claim cannot be asserted. That is exactly the case the INCONCLUSIVE rule was
   pre-registered to cover.
 
