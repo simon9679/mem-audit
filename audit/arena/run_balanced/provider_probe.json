@@ -1,0 +1,21 @@
+{
+  "ok": true,
+  "at": "2026-08-14T09:51:36.147975Z",
+  "finish_reason": "length",
+  "model": "zai-glm-4.7",
+  "usage": {
+    "completion_tokens": 1,
+    "prompt_tokens": 6,
+    "total_tokens": 7,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 1,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 0
+    }
+  }
+}

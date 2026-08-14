@@ -1,0 +1,79 @@
+{
+  "pass": 2,
+  "ordinal": 12,
+  "prompt_id": "92a5f85ad8414404",
+  "direction": "AB",
+  "candidate_position": "B",
+  "timestamp": "2026-08-14T09:58:40.671308Z",
+  "latency_seconds": 0.547,
+  "A_sha256": "63b92e0d4bcd454d377b5c394c0f2756ab3b1d9604326d9ed36de46859418096",
+  "B_sha256": "ec8343dcac1f70a423bde0441584aa67591bd8365e3f68c9381b3d23b9d120e2",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A>>B\", \"rationale\": \"Answer A follows the exact syllable count, rhyme scheme, and structure of the original song, while Answer B fails to match the syllable counts and structure of the original lyrics. Answer A also captures the requested theme of driving to see friends and feeling happier, whereas Answer B deviates from the original format.\"}\n",
+  "parsed_json": {
+    "verdict": "A>>B",
+    "rationale": "Answer A follows the exact syllable count, rhyme scheme, and structure of the original song, while Answer B fails to match the syllable counts and structure of the original lyrics. Answer A also captures the requested theme of driving to see friends and feeling happier, whereas Answer B deviates from the original format."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 79,
+    "prompt_tokens": 1249,
+    "total_tokens": 1328,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 512
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-fe23b902-8e6d-4f57-b605-18febdfd22e5",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A>>B\", \"rationale\": \"Answer A follows the exact syllable count, rhyme scheme, and structure of the original song, while Answer B fails to match the syllable counts and structure of the original lyrics. Answer A also captures the requested theme of driving to see friends and feeling happier, whereas Answer B deviates from the original format.\"}\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701520,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 79,
+      "prompt_tokens": 1249,
+      "total_tokens": 1328,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 512
+      }
+    },
+    "time_info": {
+      "created": 1786701520.973276,
+      "queue_time": 0.002783456,
+      "prompt_time": 0.02533765,
+      "completion_time": 0.152978294,
+      "total_time": 0.18249106407165527
+    }
+  }
+}

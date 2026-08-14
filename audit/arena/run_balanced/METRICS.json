@@ -1,0 +1,20 @@
+{
+  "M1_cross_order_outcome_differ": {
+    "count": 7,
+    "n": 20,
+    "fraction": 0.35
+  },
+  "M2_same_order_outcome_differ": {
+    "count": 0,
+    "n": 20,
+    "fraction": 0.0
+  },
+  "M3_mcnemar_cross_order_tie_decision": {
+    "decision_tie_discordant_prompts": 5,
+    "tie_under_BA": 4,
+    "tie_under_AB": 1,
+    "exact_two_sided_p": 0.375,
+    "significant_at_0.0625": false
+  },
+  "computed_at": "2026-08-14T10:05:04.182993Z"
+}

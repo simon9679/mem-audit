@@ -1,0 +1,79 @@
+{
+  "pass": 1,
+  "ordinal": 15,
+  "prompt_id": "d59970c7e9dd4d37",
+  "direction": "BA",
+  "candidate_position": "A",
+  "timestamp": "2026-08-14T09:54:48.255047Z",
+  "latency_seconds": 0.656,
+  "A_sha256": "e66244e71db83cde6ec948e3325e95f0a059aea5ac5e3f9c7d7bdec30a09300a",
+  "B_sha256": "fba99239c68105943b995d40867c81119c187b56217311f9d01b1c6f91f60ef5",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A=B\", \"rationale\": \"Both Answer A and Answer B provide correct and functional CMakeLists.txt files that link librdkafka and an etcd client library. Answer A uses `find_package` with CMake config files, while Answer B uses `pkg_check_modules` via PkgConfig, making them equally valid depending on the user's environment and library installation method.\"}",
+  "parsed_json": {
+    "verdict": "A=B",
+    "rationale": "Both Answer A and Answer B provide correct and functional CMakeLists.txt files that link librdkafka and an etcd client library. Answer A uses `find_package` with CMake config files, while Answer B uses `pkg_check_modules` via PkgConfig, making them equally valid depending on the user's environment and library installation method."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 85,
+    "prompt_tokens": 2917,
+    "total_tokens": 3002,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-9a652e94-9c20-4c15-a408-be8b3557c565",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A=B\", \"rationale\": \"Both Answer A and Answer B provide correct and functional CMakeLists.txt files that link librdkafka and an etcd client library. Answer A uses `find_package` with CMake config files, while Answer B uses `pkg_check_modules` via PkgConfig, making them equally valid depending on the user's environment and library installation method.\"}",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701288,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 85,
+      "prompt_tokens": 2917,
+      "total_tokens": 3002,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701288.4795492,
+      "queue_time": 0.003696949,
+      "prompt_time": 0.065490267,
+      "completion_time": 0.181043826,
+      "total_time": 0.2519526481628418
+    }
+  }
+}

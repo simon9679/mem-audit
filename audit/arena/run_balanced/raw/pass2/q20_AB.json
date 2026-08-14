@@ -1,0 +1,79 @@
+{
+  "pass": 2,
+  "ordinal": 20,
+  "prompt_id": "ec71c09662a64365",
+  "direction": "AB",
+  "candidate_position": "B",
+  "timestamp": "2026-08-14T10:00:30.673576Z",
+  "latency_seconds": 0.906,
+  "A_sha256": "385ab2bcfd97f1b8715987293af799c6875be976823e93da70c71e3962fa3ef8",
+  "B_sha256": "b572d6ec8772ca26d1f00c191b3fa38954be025eb928fc197c543510e7996bc1",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers provide correct, complete, and helpful Python scripts that extract screenshots from an .mp4 file at 10-second intervals. Answer A uses OpenCV, while Answer B uses ffmpeg, but both fulfill the user's request effectively with clear instructions and usage examples.\"}",
+  "parsed_json": {
+    "verdict": "A=B",
+    "rationale": "Both answers provide correct, complete, and helpful Python scripts that extract screenshots from an .mp4 file at 10-second intervals. Answer A uses OpenCV, while Answer B uses ffmpeg, but both fulfill the user's request effectively with clear instructions and usage examples."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 68,
+    "prompt_tokens": 3003,
+    "total_tokens": 3071,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-b71b3976-b75d-43bc-a23f-4cadd4186a99",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers provide correct, complete, and helpful Python scripts that extract screenshots from an .mp4 file at 10-second intervals. Answer A uses OpenCV, while Answer B uses ffmpeg, but both fulfill the user's request effectively with clear instructions and usage examples.\"}",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701630,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 68,
+      "prompt_tokens": 3003,
+      "total_tokens": 3071,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701630.6986907,
+      "queue_time": 0.002965724,
+      "prompt_time": 0.060529981,
+      "completion_time": 0.173465926,
+      "total_time": 0.23913359642028809
+    }
+  }
+}

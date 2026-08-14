@@ -1,0 +1,79 @@
+{
+  "pass": 2,
+  "ordinal": 17,
+  "prompt_id": "e51d15007484432c",
+  "direction": "AB",
+  "candidate_position": "B",
+  "timestamp": "2026-08-14T09:59:49.259893Z",
+  "latency_seconds": 0.703,
+  "A_sha256": "6543d172b622b7fcce4c26e06a305a08a0f2b5efe97346746c284eec6820c7fc",
+  "B_sha256": "eb7c0460877bc57ed333b7ccb27bc8cc9d02149a8801a6052cc550a9a49326a9",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers provide correct and functionally equivalent implementations of the requested macro for the Unity framework, replacing `exit(0)` with `UnityFail()` to integrate gracefully with the test runner. Answer A is concise and focuses on the core solution, while Answer B offers additional context, a fatal variant, and a detailed integration guide, but both satisfy the user's request accurately.\"}\r",
+  "parsed_json": {
+    "verdict": "A=B",
+    "rationale": "Both answers provide correct and functionally equivalent implementations of the requested macro for the Unity framework, replacing `exit(0)` with `UnityFail()` to integrate gracefully with the test runner. Answer A is concise and focuses on the core solution, while Answer B offers additional context, a fatal variant, and a detailed integration guide, but both satisfy the user's request accurately."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 90,
+    "prompt_tokens": 2810,
+    "total_tokens": 2900,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-5621e539-eff1-4038-b7e7-a96f8c8de2cd",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers provide correct and functionally equivalent implementations of the requested macro for the Unity framework, replacing `exit(0)` with `UnityFail()` to integrate gracefully with the test runner. Answer A is concise and focuses on the core solution, while Answer B offers additional context, a fatal variant, and a detailed integration guide, but both satisfy the user's request accurately.\"}\r",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701589,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 90,
+      "prompt_tokens": 2810,
+      "total_tokens": 2900,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701589.4272087,
+      "queue_time": 0.002748733,
+      "prompt_time": 0.056910143,
+      "completion_time": 0.246026575,
+      "total_time": 0.3073267936706543
+    }
+  }
+}
