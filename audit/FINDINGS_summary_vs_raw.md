@@ -47,13 +47,15 @@ The consequence was not only a wrong count: because the leak ran in one directio
 the defect would manufacture an artificial position effect. The scoring run that would
 have followed was correctly never created.
 
-**Verifiability: partial — the defect is checkable, the run is not.** The faulty classifier
-survives as `codex/src/scoring04.py` line 85, byte-identical in both the live tree and the
-backup (SHA-256 `25e19c7519713dda8aed57d8173707db19377259ad274cf6e29899138e8d713b`), and
-the asymmetric leak reproduces from the line alone. The arithmetic also reconstructs: with
+**Verifiability: the mechanism is checkable, the run and the code are not published here.**
+The faulty classifier survives outside this repository, in the run working tree, as
+`src/scoring04.py` line 85 (SHA-256
+`25e19c7519713dda8aed57d8173707db19377259ad274cf6e29899138e8d713b`, byte-identical in the
+live tree and the backup); `scoring03.py` line 112 carries the same error on the baseline
+side. Neither file is in this repository — the line quoted above is the whole of it, and
+the asymmetric leak reproduces from that line alone in any Python interpreter. The arithmetic also reconstructs: with
 one tie leaking into a win under `ORACLE_A`, the counts become 19 wins and 1 tie, which
 formally satisfies `ties ≤ 1` — the mechanism by which a FAIL was recorded as PASS.
-`scoring03.py` line 112 carries the same error on the baseline side.
 
 What cannot be shown is the run itself. The bundle `arena_hard_glm_calibration_04` was deleted during a
 cleanup of five early invalid bundles, together with `arena_hard_infrastructure_probe_01`,
@@ -165,12 +167,13 @@ first one was written.
 
 | case | primary artifact | where |
 |---|---|---|
-| `calibration_04` | **partial** | faulty code survives in `codex/src/scoring04.py`; raw verdicts destroyed |
+| `calibration_04` | **mechanism only** | defective line quoted above and reproducible; code lives outside this repo, raw verdicts destroyed |
 | `gptoss_probe_02` | **destroyed** | deleted in the same cleanup as `calibration_04` |
 | `compare_dumps.py` J4/K4 | exists | published, `RESULTS_mem0_J4K4.md` |
 | `canary_01` | exists | run archive, not published |
 | `scoring_05` | exists | run archive, not published |
 
 Only one of the five is checkable from this repository as it stands. Two were lost in a
-single cleanup of five early bundles; of those two, one left its defective code behind and
-one left nothing.
+single cleanup of five early bundles; of those two, `calibration_04` left behind a
+defective line that can be re-run in isolation, and `gptoss_probe_02` left nothing. The
+remaining two exist in the run archive but are not published here.

@@ -85,10 +85,17 @@ Three passes over the 20 prompts, 60 calls, order balanced 10/10:
 | **M2** same-order instability (Pass 1 vs Pass 3) | **0/20 = 0.00** |
 | **M3** exact McNemar, tie/decision discordance | **p = 0.375** (4:1) |
 
-**M2 = 0 is the substantive result.** The judge reproduced itself on all twenty prompts
-at fixed order, down to the verdict string. With repeat noise at exactly zero, the entire
-7/20 cross-order instability is attributable to answer position — there is no stochastic
-component left to absorb any of it.
+**M2 = 0 is the substantive result.** The judge reproduced itself on all twenty prompts at
+fixed order, down to the verdict string. 7/20 cross-order disagreements against 0/20
+same-order disagreements is strong evidence that answer position contributes to the
+instability: ordinary same-order judge noise, as measured in this run, does not explain the
+pattern.
+
+Zero observed is not zero probability. At n = 20, an observed 0/20 is compatible with a
+true same-order disagreement rate of up to about 16% (95% Wilson upper bound 0.161; the
+rule of three gives 3/20 = 0.15). So the correct statement is that same-order noise was
+not detected at this sample size, not that it is absent — and consequently not that the
+whole 7/20 is attributable to order.
 
 **M3 did not confirm the narrower hypothesis.** The stage-3 data showed tie discordance
 5:0 in favour of ties under BA; the fresh run gave 4:1, and one prompt breaking the
@@ -101,9 +108,9 @@ limitation was recorded in the pre-registration before any call, not discovered 
 
 ## What this line did and did not establish
 
-Established: on close pairs this judge changes its outcome on one prompt in three purely
-from answer position, with zero same-order noise to explain it away (M2 = 0/20). Three
-observations agree in pointing that way — near-perfect discrimination on obvious pairs
+Established: on close pairs this judge changes its outcome on one prompt in three when the
+answer positions are swapped, while no same-order disagreement was detected at all
+(M2 = 0/20, upper bound ~16% at this n). Three observations agree in pointing that way — near-perfect discrimination on obvious pairs
 (37/40, score 0.9625), a five-times larger position-associated score gap on close pairs
 (0.125 against 0.025, opposite signs), and 7/20 cross-order against 0/20 same-order
 disagreement in the balanced run.
