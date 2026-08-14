@@ -1,0 +1,79 @@
+{
+  "pass": 2,
+  "ordinal": 15,
+  "prompt_id": "d59970c7e9dd4d37",
+  "direction": "AB",
+  "candidate_position": "B",
+  "timestamp": "2026-08-14T09:59:21.877292Z",
+  "latency_seconds": 0.64,
+  "A_sha256": "fba99239c68105943b995d40867c81119c187b56217311f9d01b1c6f91f60ef5",
+  "B_sha256": "e66244e71db83cde6ec948e3325e95f0a059aea5ac5e3f9c7d7bdec30a09300a",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers provide correct and functional CMakeLists.txt files that link librdkafka and etcd-cpp-client. Answer A uses pkg-config, while Answer B uses find_package with CMake config files, but both approaches are valid and cover the necessary dependencies and compilation settings.\"}\n",
+  "parsed_json": {
+    "verdict": "A=B",
+    "rationale": "Both answers provide correct and functional CMakeLists.txt files that link librdkafka and etcd-cpp-client. Answer A uses pkg-config, while Answer B uses find_package with CMake config files, but both approaches are valid and cover the necessary dependencies and compilation settings."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 72,
+    "prompt_tokens": 2917,
+    "total_tokens": 2989,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 896
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-99dbd380-682c-4d87-8cac-791f8f10b5ea",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers provide correct and functional CMakeLists.txt files that link librdkafka and etcd-cpp-client. Answer A uses pkg-config, while Answer B uses find_package with CMake config files, but both approaches are valid and cover the necessary dependencies and compilation settings.\"}\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701562,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 72,
+      "prompt_tokens": 2917,
+      "total_tokens": 2989,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 896
+      }
+    },
+    "time_info": {
+      "created": 1786701562.1348786,
+      "queue_time": 0.002767997,
+      "prompt_time": 0.051961196,
+      "completion_time": 0.172367305,
+      "total_time": 0.22920942306518555
+    }
+  }
+}

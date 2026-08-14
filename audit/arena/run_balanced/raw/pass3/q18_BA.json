@@ -1,0 +1,79 @@
+{
+  "pass": 3,
+  "ordinal": 18,
+  "prompt_id": "e8ba8a5d82944b46",
+  "direction": "BA",
+  "candidate_position": "A",
+  "timestamp": "2026-08-14T10:04:36.055341Z",
+  "latency_seconds": 0.641,
+  "A_sha256": "f264b6923519fc8c1599bbf00582ba4011ad13d95287dde69692dae41727e496",
+  "B_sha256": "a41af59bc722a85ecc89ce0e231ed03f2b29ada2bc2e9cc292097f41dd3bdda3",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A provides a mechanically precise encounter with specific stat blocks, clear tactical flow, and a unique, thematic antagonist suitable for level 1 characters, whereas Answer B relies on reskinned generic stats and offers less concrete mechanical detail.\"}",
+  "parsed_json": {
+    "verdict": "A>B",
+    "rationale": "Answer A provides a mechanically precise encounter with specific stat blocks, clear tactical flow, and a unique, thematic antagonist suitable for level 1 characters, whereas Answer B relies on reskinned generic stats and offers less concrete mechanical detail."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 61,
+    "prompt_tokens": 3814,
+    "total_tokens": 3875,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 3712
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-d75d3f0f-d030-4280-b8a9-fce2cd51a00b",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A provides a mechanically precise encounter with specific stat blocks, clear tactical flow, and a unique, thematic antagonist suitable for level 1 characters, whereas Answer B relies on reskinned generic stats and offers less concrete mechanical detail.\"}",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701876,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 61,
+      "prompt_tokens": 3814,
+      "total_tokens": 3875,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 3712
+      }
+    },
+    "time_info": {
+      "created": 1786701876.3418489,
+      "queue_time": 0.002994616,
+      "prompt_time": 0.014037555,
+      "completion_time": 0.181824105,
+      "total_time": 0.20049357414245605
+    }
+  }
+}

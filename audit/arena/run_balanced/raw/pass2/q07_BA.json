@@ -1,0 +1,79 @@
+{
+  "pass": 2,
+  "ordinal": 7,
+  "prompt_id": "5eee4e5641ce4fa7",
+  "direction": "BA",
+  "candidate_position": "A",
+  "timestamp": "2026-08-14T09:57:32.221829Z",
+  "latency_seconds": 0.641,
+  "A_sha256": "d8d30dff7f5af446c3c46c2aa500eb586f4c705b7a3d39253a3e80afee88a7d6",
+  "B_sha256": "131d79d0162e61c3ea060dba0d6e63dd8f83ce8c121f6703ca0cd7871fe3ecf0",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A provides a single, erudite, and memorable title along with a creative poet name, directly fulfilling the user's request without unnecessary elaboration. Answer B offers multiple options and an explanation, which dilutes the impact and fails to provide a definitive, singular title as requested.\"}\r",
+  "parsed_json": {
+    "verdict": "A>B",
+    "rationale": "Answer A provides a single, erudite, and memorable title along with a creative poet name, directly fulfilling the user's request without unnecessary elaboration. Answer B offers multiple options and an explanation, which dilutes the impact and fails to provide a definitive, singular title as requested."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 73,
+    "prompt_tokens": 1199,
+    "total_tokens": 1272,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 640
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-6fc300dc-0ce1-4fa0-a7b1-3996789dcb8d",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A provides a single, erudite, and memorable title along with a creative poet name, directly fulfilling the user's request without unnecessary elaboration. Answer B offers multiple options and an explanation, which dilutes the impact and fails to provide a definitive, singular title as requested.\"}\r",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701452,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 73,
+      "prompt_tokens": 1199,
+      "total_tokens": 1272,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 640
+      }
+    },
+    "time_info": {
+      "created": 1786701452.4075115,
+      "queue_time": 0.002776164,
+      "prompt_time": 0.020937298,
+      "completion_time": 0.164796088,
+      "total_time": 0.23732495307922363
+    }
+  }
+}

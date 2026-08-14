@@ -1,0 +1,79 @@
+{
+  "pass": 1,
+  "ordinal": 18,
+  "prompt_id": "e8ba8a5d82944b46",
+  "direction": "BA",
+  "candidate_position": "A",
+  "timestamp": "2026-08-14T09:55:29.301135Z",
+  "latency_seconds": 0.719,
+  "A_sha256": "f264b6923519fc8c1599bbf00582ba4011ad13d95287dde69692dae41727e496",
+  "B_sha256": "a41af59bc722a85ecc89ce0e231ed03f2b29ada2bc2e9cc292097f41dd3bdda3",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A provides a mechanically precise encounter with specific stat blocks, clear tactical flow, and a unique, thematic antagonist suitable for Pathfinder 2e, whereas Answer B relies on generic stat substitutions and less specific mechanics. Answer A's structure, including a ready-to-copy stat block and scalable difficulty, makes it more immediately useful and complete for a game master.\"}\n",
+  "parsed_json": {
+    "verdict": "A>B",
+    "rationale": "Answer A provides a mechanically precise encounter with specific stat blocks, clear tactical flow, and a unique, thematic antagonist suitable for Pathfinder 2e, whereas Answer B relies on generic stat substitutions and less specific mechanics. Answer A's structure, including a ready-to-copy stat block and scalable difficulty, makes it more immediately useful and complete for a game master."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 87,
+    "prompt_tokens": 3814,
+    "total_tokens": 3901,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-253e81c2-2192-4279-9597-f36f95a507bb",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A provides a mechanically precise encounter with specific stat blocks, clear tactical flow, and a unique, thematic antagonist suitable for Pathfinder 2e, whereas Answer B relies on generic stat substitutions and less specific mechanics. Answer A's structure, including a ready-to-copy stat block and scalable difficulty, makes it more immediately useful and complete for a game master.\"}\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701329,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 87,
+      "prompt_tokens": 3814,
+      "total_tokens": 3901,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701329.4640408,
+      "queue_time": 0.003298527,
+      "prompt_time": 0.07517363,
+      "completion_time": 0.230691541,
+      "total_time": 0.31103086471557617
+    }
+  }
+}

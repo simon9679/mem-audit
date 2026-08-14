@@ -1,0 +1,79 @@
+{
+  "pass": 2,
+  "ordinal": 18,
+  "prompt_id": "e8ba8a5d82944b46",
+  "direction": "AB",
+  "candidate_position": "B",
+  "timestamp": "2026-08-14T10:00:03.004907Z",
+  "latency_seconds": 0.734,
+  "A_sha256": "a41af59bc722a85ecc89ce0e231ed03f2b29ada2bc2e9cc292097f41dd3bdda3",
+  "B_sha256": "f264b6923519fc8c1599bbf00582ba4011ad13d95287dde69692dae41727e496",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A provides a more atmospheric and narrative-driven encounter that fits the 'spooky thrilling' request better than Answer B. The antagonists in Answer A (Ghoul Caller and Ghastling) are more thematically appropriate for a spooky setting and offer a clearer challenge for level 1 characters compared to the animated lantern and sprites in Answer B. Answer A also includes better hooks for future adventures and a more immersive setting description.\"}\n",
+  "parsed_json": {
+    "verdict": "A>B",
+    "rationale": "Answer A provides a more atmospheric and narrative-driven encounter that fits the 'spooky thrilling' request better than Answer B. The antagonists in Answer A (Ghoul Caller and Ghastling) are more thematically appropriate for a spooky setting and offer a clearer challenge for level 1 characters compared to the animated lantern and sprites in Answer B. Answer A also includes better hooks for future adventures and a more immersive setting description."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 103,
+    "prompt_tokens": 3814,
+    "total_tokens": 3917,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-6f17f1cc-49aa-4608-bea0-e7a7b0a0ccdd",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A provides a more atmospheric and narrative-driven encounter that fits the 'spooky thrilling' request better than Answer B. The antagonists in Answer A (Ghoul Caller and Ghastling) are more thematically appropriate for a spooky setting and offer a clearer challenge for level 1 characters compared to the animated lantern and sprites in Answer B. Answer A also includes better hooks for future adventures and a more immersive setting description.\"}\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701603,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 103,
+      "prompt_tokens": 3814,
+      "total_tokens": 3917,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701603.1850352,
+      "queue_time": 0.003512058,
+      "prompt_time": 0.074323205,
+      "completion_time": 0.228232854,
+      "total_time": 0.3074774742126465
+    }
+  }
+}

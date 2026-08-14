@@ -1,0 +1,79 @@
+{
+  "pass": 1,
+  "ordinal": 1,
+  "prompt_id": "0275cb6eae1649c1",
+  "direction": "AB",
+  "candidate_position": "B",
+  "timestamp": "2026-08-14T09:51:36.905431Z",
+  "latency_seconds": 0.75,
+  "A_sha256": "e295c646c565ee7e1ff2c620ca156ea3b16c0e67391483e4928f469c00d56a4a",
+  "B_sha256": "46dd60398e8d879a46ba0fca9ba0d9cc69eec00422d51a2a1dd8202a5e1fb932",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A directly addresses the user's core question by deriving a simple, exact linear projection from the symmetric 3D space to the perceptual 2D space, showing that the perceptual dimensions are linear combinations of the symmetric ones. Answer B provides a much more extensive derivation involving pseudo-inverses and matrix transformations, but it ultimately complicates the problem and contains errors in the matrix algebra (e.g., the claimed conversion matrices do not correctly map the definitions provided). Answer A is more concise, correct, and helpful for the specific question asked.\"}\n",
+  "parsed_json": {
+    "verdict": "A>B",
+    "rationale": "Answer A directly addresses the user's core question by deriving a simple, exact linear projection from the symmetric 3D space to the perceptual 2D space, showing that the perceptual dimensions are linear combinations of the symmetric ones. Answer B provides a much more extensive derivation involving pseudo-inverses and matrix transformations, but it ultimately complicates the problem and contains errors in the matrix algebra (e.g., the claimed conversion matrices do not correctly map the definitions provided). Answer A is more concise, correct, and helpful for the specific question asked."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 127,
+    "prompt_tokens": 5103,
+    "total_tokens": 5230,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 0
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-e993f394-3a13-48a6-aba4-4dd5e7e40f31",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A directly addresses the user's core question by deriving a simple, exact linear projection from the symmetric 3D space to the perceptual 2D space, showing that the perceptual dimensions are linear combinations of the symmetric ones. Answer B provides a much more extensive derivation involving pseudo-inverses and matrix transformations, but it ultimately complicates the problem and contains errors in the matrix algebra (e.g., the claimed conversion matrices do not correctly map the definitions provided). Answer A is more concise, correct, and helpful for the specific question asked.\"}\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701096,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 127,
+      "prompt_tokens": 5103,
+      "total_tokens": 5230,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 0
+      }
+    },
+    "time_info": {
+      "created": 1786701096.975285,
+      "queue_time": 0.002696762,
+      "prompt_time": 0.091832663,
+      "completion_time": 0.274925627,
+      "total_time": 0.3712284564971924
+    }
+  }
+}

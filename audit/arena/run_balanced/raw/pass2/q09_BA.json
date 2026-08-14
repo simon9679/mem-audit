@@ -1,0 +1,79 @@
+{
+  "pass": 2,
+  "ordinal": 9,
+  "prompt_id": "6b815351745040ca",
+  "direction": "BA",
+  "candidate_position": "A",
+  "timestamp": "2026-08-14T09:57:59.841941Z",
+  "latency_seconds": 0.891,
+  "A_sha256": "1dce28220ecd6fd3ba59bea821caa18775950ce5440cce711b910626c7c74f94",
+  "B_sha256": "623b4dfd2799a27b14882024549945e8b93db5ecc917df2137f23dc0ee7cf140",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A>>B\", \"rationale\": \"Answer A provides a highly structured, step-by-step breakdown with explicit chain-of-thought reasoning, multiple options for each subsection, and a clear rationale for choices, fully adhering to the user's complex formatting instructions. Answer B attempts the process but lacks the rigor of generating three suggestions for the next step before picking one, and the final lyrics are less polished and stylistically consistent with Taylor Swift compared to Answer A's cohesive anthem.\"}\r\n",
+  "parsed_json": {
+    "verdict": "A>>B",
+    "rationale": "Answer A provides a highly structured, step-by-step breakdown with explicit chain-of-thought reasoning, multiple options for each subsection, and a clear rationale for choices, fully adhering to the user's complex formatting instructions. Answer B attempts the process but lacks the rigor of generating three suggestions for the next step before picking one, and the final lyrics are less polished and stylistically consistent with Taylor Swift compared to Answer A's cohesive anthem."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 104,
+    "prompt_tokens": 4091,
+    "total_tokens": 4195,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-3b527eab-71b6-4ced-a587-29b571d43faa",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A>>B\", \"rationale\": \"Answer A provides a highly structured, step-by-step breakdown with explicit chain-of-thought reasoning, multiple options for each subsection, and a clear rationale for choices, fully adhering to the user's complex formatting instructions. Answer B attempts the process but lacks the rigor of generating three suggestions for the next step before picking one, and the final lyrics are less polished and stylistically consistent with Taylor Swift compared to Answer A's cohesive anthem.\"}\r\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701479,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 104,
+      "prompt_tokens": 4091,
+      "total_tokens": 4195,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701479.9347143,
+      "queue_time": 0.002974753,
+      "prompt_time": 0.141355417,
+      "completion_time": 0.237444247,
+      "total_time": 0.3837776184082031
+    }
+  }
+}

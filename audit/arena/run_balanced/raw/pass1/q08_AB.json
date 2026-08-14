@@ -1,0 +1,79 @@
+{
+  "pass": 1,
+  "ordinal": 8,
+  "prompt_id": "63db9fc8fd994d11",
+  "direction": "AB",
+  "candidate_position": "B",
+  "timestamp": "2026-08-14T09:53:12.745462Z",
+  "latency_seconds": 0.579,
+  "A_sha256": "a25f8b614141fa81d5f9cab02c30b9826911950d2dbafb8129225d858369cecc",
+  "B_sha256": "bfa2c5f376146ba45a94b550f4abfcd0683c9d92f3a38a9eacc4e203408eaa47",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A strictly follows the lục bát meter (6-8 syllables) and accurately recounts historical events, making it easy to remember. Answer B fails to maintain the correct meter, contains factual errors (e.g., confusing Gia Long with Nguyễn Ái Quốc), and is less coherent.\"}\r\n",
+  "parsed_json": {
+    "verdict": "A>B",
+    "rationale": "Answer A strictly follows the lục bát meter (6-8 syllables) and accurately recounts historical events, making it easy to remember. Answer B fails to maintain the correct meter, contains factual errors (e.g., confusing Gia Long with Nguyễn Ái Quốc), and is less coherent."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 77,
+    "prompt_tokens": 1198,
+    "total_tokens": 1275,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-a01a9ae5-e9c3-4525-9583-e0b6a89ae64a",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A strictly follows the lục bát meter (6-8 syllables) and accurately recounts historical events, making it easy to remember. Answer B fails to maintain the correct meter, contains factual errors (e.g., confusing Gia Long with Nguyễn Ái Quốc), and is less coherent.\"}\r\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701192,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 77,
+      "prompt_tokens": 1198,
+      "total_tokens": 1275,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701192.9897182,
+      "queue_time": 0.003137254,
+      "prompt_time": 0.029998614,
+      "completion_time": 0.181425938,
+      "total_time": 0.21587848663330078
+    }
+  }
+}

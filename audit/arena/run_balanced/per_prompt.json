@@ -1,0 +1,442 @@
+[
+  {
+    "ordinal": 1,
+    "prompt_id": "0275cb6eae1649c1",
+    "pass1": {
+      "dir": "AB",
+      "verdict": "A>B",
+      "outcome": "baseline"
+    },
+    "pass2": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass3": {
+      "dir": "AB",
+      "verdict": "A>B",
+      "outcome": "baseline"
+    },
+    "cross_order_differ": true,
+    "same_order_differ": false,
+    "decision_tie_discordant": true
+  },
+  {
+    "ordinal": 2,
+    "prompt_id": "03c108e549b44c07",
+    "pass1": {
+      "dir": "AB",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass2": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass3": {
+      "dir": "AB",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "cross_order_differ": false,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 3,
+    "prompt_id": "199ee703dfb7418e",
+    "pass1": {
+      "dir": "AB",
+      "verdict": "A>B",
+      "outcome": "baseline"
+    },
+    "pass2": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass3": {
+      "dir": "AB",
+      "verdict": "A>B",
+      "outcome": "baseline"
+    },
+    "cross_order_differ": true,
+    "same_order_differ": false,
+    "decision_tie_discordant": true
+  },
+  {
+    "ordinal": 4,
+    "prompt_id": "296dbe66d7404f13",
+    "pass1": {
+      "dir": "AB",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass2": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass3": {
+      "dir": "AB",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "cross_order_differ": false,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 5,
+    "prompt_id": "4a687ddb55244a91",
+    "pass1": {
+      "dir": "AB",
+      "verdict": "A>B",
+      "outcome": "baseline"
+    },
+    "pass2": {
+      "dir": "BA",
+      "verdict": "A>B",
+      "outcome": "candidate"
+    },
+    "pass3": {
+      "dir": "AB",
+      "verdict": "A>B",
+      "outcome": "baseline"
+    },
+    "cross_order_differ": true,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 6,
+    "prompt_id": "52562da0204e422f",
+    "pass1": {
+      "dir": "AB",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass2": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass3": {
+      "dir": "AB",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "cross_order_differ": false,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 7,
+    "prompt_id": "5eee4e5641ce4fa7",
+    "pass1": {
+      "dir": "AB",
+      "verdict": "B>A",
+      "outcome": "candidate"
+    },
+    "pass2": {
+      "dir": "BA",
+      "verdict": "A>B",
+      "outcome": "candidate"
+    },
+    "pass3": {
+      "dir": "AB",
+      "verdict": "B>A",
+      "outcome": "candidate"
+    },
+    "cross_order_differ": false,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 8,
+    "prompt_id": "63db9fc8fd994d11",
+    "pass1": {
+      "dir": "AB",
+      "verdict": "A>B",
+      "outcome": "baseline"
+    },
+    "pass2": {
+      "dir": "BA",
+      "verdict": "B>A",
+      "outcome": "baseline"
+    },
+    "pass3": {
+      "dir": "AB",
+      "verdict": "A>B",
+      "outcome": "baseline"
+    },
+    "cross_order_differ": false,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 9,
+    "prompt_id": "6b815351745040ca",
+    "pass1": {
+      "dir": "AB",
+      "verdict": "B>A",
+      "outcome": "candidate"
+    },
+    "pass2": {
+      "dir": "BA",
+      "verdict": "A>>B",
+      "outcome": "candidate"
+    },
+    "pass3": {
+      "dir": "AB",
+      "verdict": "B>A",
+      "outcome": "candidate"
+    },
+    "cross_order_differ": false,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 10,
+    "prompt_id": "80aaebafab7a42d6",
+    "pass1": {
+      "dir": "AB",
+      "verdict": "B>A",
+      "outcome": "candidate"
+    },
+    "pass2": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass3": {
+      "dir": "AB",
+      "verdict": "B>A",
+      "outcome": "candidate"
+    },
+    "cross_order_differ": true,
+    "same_order_differ": false,
+    "decision_tie_discordant": true
+  },
+  {
+    "ordinal": 11,
+    "prompt_id": "84af6b1ab6a24583",
+    "pass1": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass2": {
+      "dir": "AB",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass3": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "cross_order_differ": false,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 12,
+    "prompt_id": "92a5f85ad8414404",
+    "pass1": {
+      "dir": "BA",
+      "verdict": "B>A",
+      "outcome": "baseline"
+    },
+    "pass2": {
+      "dir": "AB",
+      "verdict": "A>>B",
+      "outcome": "baseline"
+    },
+    "pass3": {
+      "dir": "BA",
+      "verdict": "B>A",
+      "outcome": "baseline"
+    },
+    "cross_order_differ": false,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 13,
+    "prompt_id": "9998c85d29534288",
+    "pass1": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass2": {
+      "dir": "AB",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass3": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "cross_order_differ": false,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 14,
+    "prompt_id": "c932306ac779400c",
+    "pass1": {
+      "dir": "BA",
+      "verdict": "A>B",
+      "outcome": "candidate"
+    },
+    "pass2": {
+      "dir": "AB",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass3": {
+      "dir": "BA",
+      "verdict": "A>B",
+      "outcome": "candidate"
+    },
+    "cross_order_differ": true,
+    "same_order_differ": false,
+    "decision_tie_discordant": true
+  },
+  {
+    "ordinal": 15,
+    "prompt_id": "d59970c7e9dd4d37",
+    "pass1": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass2": {
+      "dir": "AB",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass3": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "cross_order_differ": false,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 16,
+    "prompt_id": "d83ec0680877455a",
+    "pass1": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass2": {
+      "dir": "AB",
+      "verdict": "A>B",
+      "outcome": "baseline"
+    },
+    "pass3": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "cross_order_differ": true,
+    "same_order_differ": false,
+    "decision_tie_discordant": true
+  },
+  {
+    "ordinal": 17,
+    "prompt_id": "e51d15007484432c",
+    "pass1": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass2": {
+      "dir": "AB",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass3": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "cross_order_differ": false,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 18,
+    "prompt_id": "e8ba8a5d82944b46",
+    "pass1": {
+      "dir": "BA",
+      "verdict": "A>B",
+      "outcome": "candidate"
+    },
+    "pass2": {
+      "dir": "AB",
+      "verdict": "A>B",
+      "outcome": "baseline"
+    },
+    "pass3": {
+      "dir": "BA",
+      "verdict": "A>B",
+      "outcome": "candidate"
+    },
+    "cross_order_differ": true,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 19,
+    "prompt_id": "ea3f0b11012442e7",
+    "pass1": {
+      "dir": "BA",
+      "verdict": "A>B",
+      "outcome": "candidate"
+    },
+    "pass2": {
+      "dir": "AB",
+      "verdict": "B>A",
+      "outcome": "candidate"
+    },
+    "pass3": {
+      "dir": "BA",
+      "verdict": "A>B",
+      "outcome": "candidate"
+    },
+    "cross_order_differ": false,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  },
+  {
+    "ordinal": 20,
+    "prompt_id": "ec71c09662a64365",
+    "pass1": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass2": {
+      "dir": "AB",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "pass3": {
+      "dir": "BA",
+      "verdict": "A=B",
+      "outcome": "tie"
+    },
+    "cross_order_differ": false,
+    "same_order_differ": false,
+    "decision_tie_discordant": false
+  }
+]

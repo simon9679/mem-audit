@@ -1,0 +1,79 @@
+{
+  "pass": 1,
+  "ordinal": 20,
+  "prompt_id": "ec71c09662a64365",
+  "direction": "BA",
+  "candidate_position": "A",
+  "timestamp": "2026-08-14T09:55:56.899467Z",
+  "latency_seconds": 0.75,
+  "A_sha256": "b572d6ec8772ca26d1f00c191b3fa38954be025eb928fc197c543510e7996bc1",
+  "B_sha256": "385ab2bcfd97f1b8715987293af799c6875be976823e93da70c71e3962fa3ef8",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A=B\", \"rationale\": \"Both Answer A and Answer B provide correct, complete, and helpful Python scripts that extract screenshots from an .mp4 file at 10-second intervals. Answer A uses ffmpeg-python for potentially faster seeking and includes more detailed documentation and error handling, while Answer B uses OpenCV and is more concise. Both solutions fulfill the user's request effectively.\"}\r",
+  "parsed_json": {
+    "verdict": "A=B",
+    "rationale": "Both Answer A and Answer B provide correct, complete, and helpful Python scripts that extract screenshots from an .mp4 file at 10-second intervals. Answer A uses ffmpeg-python for potentially faster seeking and includes more detailed documentation and error handling, while Answer B uses OpenCV and is more concise. Both solutions fulfill the user's request effectively."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 84,
+    "prompt_tokens": 3003,
+    "total_tokens": 3087,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-1eebcce6-8825-479d-9dbc-cbaae6f4f3cd",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A=B\", \"rationale\": \"Both Answer A and Answer B provide correct, complete, and helpful Python scripts that extract screenshots from an .mp4 file at 10-second intervals. Answer A uses ffmpeg-python for potentially faster seeking and includes more detailed documentation and error handling, while Answer B uses OpenCV and is more concise. Both solutions fulfill the user's request effectively.\"}\r",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701357,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 84,
+      "prompt_tokens": 3003,
+      "total_tokens": 3087,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701357.1532483,
+      "queue_time": 0.002871863,
+      "prompt_time": 0.056153205,
+      "completion_time": 0.154855757,
+      "total_time": 0.21558570861816406
+    }
+  }
+}

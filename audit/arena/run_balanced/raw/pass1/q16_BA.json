@@ -1,0 +1,79 @@
+{
+  "pass": 1,
+  "ordinal": 16,
+  "prompt_id": "d83ec0680877455a",
+  "direction": "BA",
+  "candidate_position": "A",
+  "timestamp": "2026-08-14T09:55:01.921487Z",
+  "latency_seconds": 0.672,
+  "A_sha256": "715da3f2969406bd101142eed3a66b0d39aa33c531c7e11d66a32abf8afd0286",
+  "B_sha256": "e034977553ed36654aaafc9e4300399623533efb1b199e6318cb1c5fb6fff20f",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers follow the instructions by writing a mini-story about klassika.ru, maintaining a rational and restrained tone, and including a couple of jokes. Neither uses the forbidden word. Answer A is more structured and descriptive, while Answer B is more concise and personal, making them equally valid interpretations of the prompt.\"}\n",
+  "parsed_json": {
+    "verdict": "A=B",
+    "rationale": "Both answers follow the instructions by writing a mini-story about klassika.ru, maintaining a rational and restrained tone, and including a couple of jokes. Neither uses the forbidden word. Answer A is more structured and descriptive, while Answer B is more concise and personal, making them equally valid interpretations of the prompt."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 77,
+    "prompt_tokens": 1246,
+    "total_tokens": 1323,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-989e9599-2656-4e69-913e-124eb372d91c",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers follow the instructions by writing a mini-story about klassika.ru, maintaining a rational and restrained tone, and including a couple of jokes. Neither uses the forbidden word. Answer A is more structured and descriptive, while Answer B is more concise and personal, making them equally valid interpretations of the prompt.\"}\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701302,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 77,
+      "prompt_tokens": 1246,
+      "total_tokens": 1323,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701302.136757,
+      "queue_time": 0.002750106,
+      "prompt_time": 0.030351385,
+      "completion_time": 0.189983688,
+      "total_time": 0.22432470321655273
+    }
+  }
+}

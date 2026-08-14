@@ -1,0 +1,79 @@
+{
+  "pass": 2,
+  "ordinal": 14,
+  "prompt_id": "c932306ac779400c",
+  "direction": "AB",
+  "candidate_position": "B",
+  "timestamp": "2026-08-14T09:59:08.231488Z",
+  "latency_seconds": 0.86,
+  "A_sha256": "d92c1ef0dabf8003544999734bf170f5fdbe2bbdc88e256c5f0a6be7bc5d0349",
+  "B_sha256": "5f52757f28dd4db58dacae92ed51dfc97dbe000c23e3570708c69e2480e3ca0f",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers successfully fulfill the user's request by presenting a structured debate between a sportsman, writer, politician, and scientist about the greatest event on September 10th. Answer A uses a narrative dialogue format with specific historical events (1972 Basketball, 1939 War declaration, 2008 LHC, 1846 Neptune), while Answer B uses a more structured layout with a table and different events (1977 Marathon, 1962 Literature, 1945 War end, 2005 Hubble). Both are equally creative, relevant, and complete in their approach to the prompt.\"}\r\n",
+  "parsed_json": {
+    "verdict": "A=B",
+    "rationale": "Both answers successfully fulfill the user's request by presenting a structured debate between a sportsman, writer, politician, and scientist about the greatest event on September 10th. Answer A uses a narrative dialogue format with specific historical events (1972 Basketball, 1939 War declaration, 2008 LHC, 1846 Neptune), while Answer B uses a more structured layout with a table and different events (1977 Marathon, 1962 Literature, 1945 War end, 2005 Hubble). Both are equally creative, relevant, and complete in their approach to the prompt."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 141,
+    "prompt_tokens": 3308,
+    "total_tokens": 3449,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-dc3c2fcc-b3f2-4bda-8897-4dc38e2769e4",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers successfully fulfill the user's request by presenting a structured debate between a sportsman, writer, politician, and scientist about the greatest event on September 10th. Answer A uses a narrative dialogue format with specific historical events (1972 Basketball, 1939 War declaration, 2008 LHC, 1846 Neptune), while Answer B uses a more structured layout with a table and different events (1977 Marathon, 1962 Literature, 1945 War end, 2005 Hubble). Both are equally creative, relevant, and complete in their approach to the prompt.\"}\r\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701548,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 141,
+      "prompt_tokens": 3308,
+      "total_tokens": 3449,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701548.3225806,
+      "queue_time": 0.003265305,
+      "prompt_time": 0.128553037,
+      "completion_time": 0.259706,
+      "total_time": 0.39411306381225586
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "pass": 2,
+  "ordinal": 3,
+  "prompt_id": "199ee703dfb7418e",
+  "direction": "BA",
+  "candidate_position": "A",
+  "timestamp": "2026-08-14T09:56:37.761494Z",
+  "latency_seconds": 0.531,
+  "A_sha256": "a76b9a409b226fb6d305e83265e82f6b9c80b995370235a478a3db7585cad99e",
+  "B_sha256": "984ca097459233af531d6efa2aaf43112bf663e61c327c579517f3b1532383a6",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A=B\", \"rationale\": \"Both poems effectively capture the plot of La La Land and incorporate Rumi-inspired themes of love, longing, and spiritual connection. Answer A uses more direct Rumi-esque phrasing and imagery, while Answer B follows a more structured narrative progression. Both are complete, relevant, and beautifully written, making them equally strong responses.\"}",
+  "parsed_json": {
+    "verdict": "A=B",
+    "rationale": "Both poems effectively capture the plot of La La Land and incorporate Rumi-inspired themes of love, longing, and spiritual connection. Answer A uses more direct Rumi-esque phrasing and imagery, while Answer B follows a more structured narrative progression. Both are complete, relevant, and beautifully written, making them equally strong responses."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 79,
+    "prompt_tokens": 1312,
+    "total_tokens": 1391,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-b783607e-eff5-4395-91be-ca92059e4309",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A=B\", \"rationale\": \"Both poems effectively capture the plot of La La Land and incorporate Rumi-inspired themes of love, longing, and spiritual connection. Answer A uses more direct Rumi-esque phrasing and imagery, while Answer B follows a more structured narrative progression. Both are complete, relevant, and beautifully written, making them equally strong responses.\"}",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701398,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 79,
+      "prompt_tokens": 1312,
+      "total_tokens": 1391,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701398.0454164,
+      "queue_time": 0.003076286,
+      "prompt_time": 0.03203893,
+      "completion_time": 0.157986148,
+      "total_time": 0.19516372680664062
+    }
+  }
+}

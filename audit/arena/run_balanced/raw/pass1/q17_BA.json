@@ -1,0 +1,79 @@
+{
+  "pass": 1,
+  "ordinal": 17,
+  "prompt_id": "e51d15007484432c",
+  "direction": "BA",
+  "candidate_position": "A",
+  "timestamp": "2026-08-14T09:55:15.569996Z",
+  "latency_seconds": 0.625,
+  "A_sha256": "eb7c0460877bc57ed333b7ccb27bc8cc9d02149a8801a6052cc550a9a49326a9",
+  "B_sha256": "6543d172b622b7fcce4c26e06a305a08a0f2b5efe97346746c284eec6820c7fc",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers correctly implement the requested macro for the Unity framework by replacing `exit()` with `UnityFail()` and using `do { ... } while(0)` for safety. Answer A provides a more comprehensive guide with optional variants and integration steps, while Answer B offers a concise, direct implementation. Both are functionally correct and helpful.\"}\n",
+  "parsed_json": {
+    "verdict": "A=B",
+    "rationale": "Both answers correctly implement the requested macro for the Unity framework by replacing `exit()` with `UnityFail()` and using `do { ... } while(0)` for safety. Answer A provides a more comprehensive guide with optional variants and integration steps, while Answer B offers a concise, direct implementation. Both are functionally correct and helpful."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 84,
+    "prompt_tokens": 2810,
+    "total_tokens": 2894,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-d88c865d-efa1-49a4-80c0-d63192dcafdf",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers correctly implement the requested macro for the Unity framework by replacing `exit()` with `UnityFail()` and using `do { ... } while(0)` for safety. Answer A provides a more comprehensive guide with optional variants and integration steps, while Answer B offers a concise, direct implementation. Both are functionally correct and helpful.\"}\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701315,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 84,
+      "prompt_tokens": 2810,
+      "total_tokens": 2894,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701315.7901015,
+      "queue_time": 0.002686012,
+      "prompt_time": 0.057980537,
+      "completion_time": 0.14767172,
+      "total_time": 0.25127625465393066
+    }
+  }
+}

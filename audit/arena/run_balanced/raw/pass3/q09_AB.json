@@ -1,0 +1,79 @@
+{
+  "pass": 3,
+  "ordinal": 9,
+  "prompt_id": "6b815351745040ca",
+  "direction": "AB",
+  "candidate_position": "B",
+  "timestamp": "2026-08-14T10:02:33.578127Z",
+  "latency_seconds": 0.703,
+  "A_sha256": "623b4dfd2799a27b14882024549945e8b93db5ecc917df2137f23dc0ee7cf140",
+  "B_sha256": "1dce28220ecd6fd3ba59bea821caa18775950ce5440cce711b910626c7c74f94",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"B>A\", \"rationale\": \"Answer B follows the user's complex instructions precisely by breaking the task into subsections, thinking out loud before and after each, and generating three suggestions for the next step before selecting one. Answer A attempts this structure but fails to provide the required \"}\r\n",
+  "parsed_json": {
+    "verdict": "B>A",
+    "rationale": "Answer B follows the user's complex instructions precisely by breaking the task into subsections, thinking out loud before and after each, and generating three suggestions for the next step before selecting one. Answer A attempts this structure but fails to provide the required "
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 67,
+    "prompt_tokens": 4091,
+    "total_tokens": 4158,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 3968
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-fd2eaa4f-a915-4409-8da0-47afb954069e",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"B>A\", \"rationale\": \"Answer B follows the user's complex instructions precisely by breaking the task into subsections, thinking out loud before and after each, and generating three suggestions for the next step before selecting one. Answer A attempts this structure but fails to provide the required \"}\r\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701753,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 67,
+      "prompt_tokens": 4091,
+      "total_tokens": 4158,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 3968
+      }
+    },
+    "time_info": {
+      "created": 1786701753.8118293,
+      "queue_time": 0.004145039,
+      "prompt_time": 0.014187329,
+      "completion_time": 0.155573132,
+      "total_time": 0.17672252655029297
+    }
+  }
+}

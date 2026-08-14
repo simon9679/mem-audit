@@ -1,0 +1,79 @@
+{
+  "pass": 1,
+  "ordinal": 4,
+  "prompt_id": "296dbe66d7404f13",
+  "direction": "AB",
+  "candidate_position": "B",
+  "timestamp": "2026-08-14T09:52:18.276183Z",
+  "latency_seconds": 1.016,
+  "A_sha256": "b8e463f31c673e8ed10d4bb65928e0fb3e42c6e4800a88eaa7f4d777a8ad32e5",
+  "B_sha256": "707510c4f6b7abcf7b3d4a2a6ab387b25818a7e527c4d6d5ab00ac6df65e47fc",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers effectively fulfill the user's request by writing a first chapter titled \\\"A Messy Plaster Cast\\\" about Tessa, a 27-year-old woman in the 80s who breaks her leg skiing. Both stories capture her sociable yet independent nature, her reluctance to ask for help, and her daring/teasing personality. Both include the specific scene of her removing her jeans and being in her panties before getting a high leg cast, and feature only female characters. Answer A focuses slightly more on the physical sensations and the specific medical procedure, while Answer B leans more into the 80s atmosphere and Tessa's internal monologue, but both are equally correct, complete, and helpful.\"}\r\n",
+  "parsed_json": {
+    "verdict": "A=B",
+    "rationale": "Both answers effectively fulfill the user's request by writing a first chapter titled \"A Messy Plaster Cast\" about Tessa, a 27-year-old woman in the 80s who breaks her leg skiing. Both stories capture her sociable yet independent nature, her reluctance to ask for help, and her daring/teasing personality. Both include the specific scene of her removing her jeans and being in her panties before getting a high leg cast, and feature only female characters. Answer A focuses slightly more on the physical sensations and the specific medical procedure, while Answer B leans more into the 80s atmosphere and Tessa's internal monologue, but both are equally correct, complete, and helpful."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 159,
+    "prompt_tokens": 3375,
+    "total_tokens": 3534,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-895de37b-6bc9-42ed-b216-e5410c658079",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A=B\", \"rationale\": \"Both answers effectively fulfill the user's request by writing a first chapter titled \\\"A Messy Plaster Cast\\\" about Tessa, a 27-year-old woman in the 80s who breaks her leg skiing. Both stories capture her sociable yet independent nature, her reluctance to ask for help, and her daring/teasing personality. Both include the specific scene of her removing her jeans and being in her panties before getting a high leg cast, and feature only female characters. Answer A focuses slightly more on the physical sensations and the specific medical procedure, while Answer B leans more into the 80s atmosphere and Tessa's internal monologue, but both are equally correct, complete, and helpful.\"}\r\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701138,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 159,
+      "prompt_tokens": 3375,
+      "total_tokens": 3534,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701138.180475,
+      "queue_time": 0.016637747,
+      "prompt_time": 0.087294012,
+      "completion_time": 0.338148896,
+      "total_time": 0.46512532234191895
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "pass": 2,
+  "ordinal": 16,
+  "prompt_id": "d83ec0680877455a",
+  "direction": "AB",
+  "candidate_position": "B",
+  "timestamp": "2026-08-14T09:59:35.551968Z",
+  "latency_seconds": 0.672,
+  "A_sha256": "e034977553ed36654aaafc9e4300399623533efb1b199e6318cb1c5fb6fff20f",
+  "B_sha256": "715da3f2969406bd101142eed3a66b0d39aa33c531c7e11d66a32abf8afd0286",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A follows the instruction to write a mini-story about the library klassika.ru in a rational and restrained tone, includes a couple of jokes, and avoids the forbidden word. Answer B, while well-written, reads more like a promotional article or a description of the site's creation rather than a personal mini-story, and it feels less restrained and more promotional in style.\"}",
+  "parsed_json": {
+    "verdict": "A>B",
+    "rationale": "Answer A follows the instruction to write a mini-story about the library klassika.ru in a rational and restrained tone, includes a couple of jokes, and avoids the forbidden word. Answer B, while well-written, reads more like a promotional article or a description of the site's creation rather than a personal mini-story, and it feels less restrained and more promotional in style."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 89,
+    "prompt_tokens": 1246,
+    "total_tokens": 1335,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 256
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-2eeaf6b0-cb83-4edc-a1fb-48b96714006f",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"A>B\", \"rationale\": \"Answer A follows the instruction to write a mini-story about the library klassika.ru in a rational and restrained tone, includes a couple of jokes, and avoids the forbidden word. Answer B, while well-written, reads more like a promotional article or a description of the site's creation rather than a personal mini-story, and it feels less restrained and more promotional in style.\"}",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701575,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 89,
+      "prompt_tokens": 1246,
+      "total_tokens": 1335,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 256
+      }
+    },
+    "time_info": {
+      "created": 1786701575.7468877,
+      "queue_time": 0.002930387,
+      "prompt_time": 0.030278366,
+      "completion_time": 0.217773196,
+      "total_time": 0.28135085105895996
+    }
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "pass": 2,
+  "ordinal": 19,
+  "prompt_id": "ea3f0b11012442e7",
+  "direction": "AB",
+  "candidate_position": "B",
+  "timestamp": "2026-08-14T10:00:16.757600Z",
+  "latency_seconds": 0.75,
+  "A_sha256": "1c5248c93cc989cd395b415fb945157a29169f47c121e493c62699622085a51a",
+  "B_sha256": "21db784610b319910e15e8a9daebd8e2bdb6fbcdfaea9bc924dc5d727afe4729",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"B>A\", \"rationale\": \"Answer B provides a more comprehensive and structured solution, offering three distinct approaches (generic, PostgreSQL/SQLite, and MySQL) with clear explanations and a ready-to-use implementation. Answer A offers two approaches but is less detailed and lacks the specific code structure and performance considerations found in Answer B.\"}\r\n",
+  "parsed_json": {
+    "verdict": "B>A",
+    "rationale": "Answer B provides a more comprehensive and structured solution, offering three distinct approaches (generic, PostgreSQL/SQLite, and MySQL) with clear explanations and a ready-to-use implementation. Answer A offers two approaches but is less detailed and lacks the specific code structure and performance considerations found in Answer B."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 74,
+    "prompt_tokens": 3890,
+    "total_tokens": 3964,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 384
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-b53ca2f5-a44a-43b4-bbda-6c242f1a2124",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"B>A\", \"rationale\": \"Answer B provides a more comprehensive and structured solution, offering three distinct approaches (generic, PostgreSQL/SQLite, and MySQL) with clear explanations and a ready-to-use implementation. Answer A offers two approaches but is less detailed and lacks the specific code structure and performance considerations found in Answer B.\"}\r\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701616,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 74,
+      "prompt_tokens": 3890,
+      "total_tokens": 3964,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 384
+      }
+    },
+    "time_info": {
+      "created": 1786701616.9455142,
+      "queue_time": 0.003408268,
+      "prompt_time": 0.086075602,
+      "completion_time": 0.207338656,
+      "total_time": 0.29839348793029785
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "frozen_sha": {
+    "PAIRS": "dd16c3e4805e30dc7d91b7fa30d0d54ff4ca2ba495dccdbabbf09ac4aa5e51e1",
+    "JUDGE_CONFIG": "257aa0a669bf2ae1abab256170197d460f1f51ee32cfaf2f7224d308cdb31945",
+    "PROMPT": "38bbd5797f38e17c5177e5dcb947572b09a3dcef00a092396b6feeea1016c72e",
+    "SCHEDULE": "6cb31f9919dfec563edc394f5488b037b1ad0b52e6141bbfc584a4e19c7cdf33",
+    "EXEC_POLICY": "88021e2bf091edc47072aa18dbd094b7f8bfcf7637c4c6a605af896a0dc732c7"
+  },
+  "recomputed": {
+    "PAIRS": "dd16c3e4805e30dc7d91b7fa30d0d54ff4ca2ba495dccdbabbf09ac4aa5e51e1",
+    "JUDGE_CONFIG": "257aa0a669bf2ae1abab256170197d460f1f51ee32cfaf2f7224d308cdb31945",
+    "SCHEDULE": "6cb31f9919dfec563edc394f5488b037b1ad0b52e6141bbfc584a4e19c7cdf33",
+    "EXEC_POLICY": "88021e2bf091edc47072aa18dbd094b7f8bfcf7637c4c6a605af896a0dc732c7",
+    "PROMPT": "38bbd5797f38e17c5177e5dcb947572b09a3dcef00a092396b6feeea1016c72e"
+  },
+  "orientation": {
+    "A_ok": 20,
+    "B_ok": 20
+  },
+  "started_at": "2026-08-14T09:51:32.229560Z"
+}

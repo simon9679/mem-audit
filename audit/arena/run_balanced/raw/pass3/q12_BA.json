@@ -1,0 +1,79 @@
+{
+  "pass": 3,
+  "ordinal": 12,
+  "prompt_id": "92a5f85ad8414404",
+  "direction": "BA",
+  "candidate_position": "A",
+  "timestamp": "2026-08-14T10:03:14.391559Z",
+  "latency_seconds": 0.578,
+  "A_sha256": "ec8343dcac1f70a423bde0441584aa67591bd8365e3f68c9381b3d23b9d120e2",
+  "B_sha256": "63b92e0d4bcd454d377b5c394c0f2756ab3b1d9604326d9ed36de46859418096",
+  "finish_reason": "stop",
+  "raw_content": "{\"verdict\": \"B>A\", \"rationale\": \"Answer B adheres much more closely to the original song's syllable count and rhyme structure than Answer A, which frequently deviates in both areas. Answer B also captures the requested themes of driving, singing, and happiness more effectively within the constraints.\"}\r\n",
+  "parsed_json": {
+    "verdict": "B>A",
+    "rationale": "Answer B adheres much more closely to the original song's syllable count and rhyme structure than Answer A, which frequently deviates in both areas. Answer B also captures the requested themes of driving, singing, and happiness more effectively within the constraints."
+  },
+  "schema_valid": true,
+  "usage": {
+    "completion_tokens": 68,
+    "prompt_tokens": 1249,
+    "total_tokens": 1317,
+    "completion_tokens_details": {
+      "accepted_prediction_tokens": 0,
+      "audio_tokens": null,
+      "reasoning_tokens": 0,
+      "rejected_prediction_tokens": 0
+    },
+    "prompt_tokens_details": {
+      "audio_tokens": null,
+      "cached_tokens": 1152
+    }
+  },
+  "raw_response": {
+    "id": "chatcmpl-3a782319-a018-4f33-867d-541d0244b4c7",
+    "choices": [
+      {
+        "finish_reason": "stop",
+        "index": 0,
+        "logprobs": null,
+        "message": {
+          "content": "{\"verdict\": \"B>A\", \"rationale\": \"Answer B adheres much more closely to the original song's syllable count and rhyme structure than Answer A, which frequently deviates in both areas. Answer B also captures the requested themes of driving, singing, and happiness more effectively within the constraints.\"}\r\n",
+          "refusal": null,
+          "role": "assistant",
+          "annotations": null,
+          "audio": null,
+          "function_call": null,
+          "tool_calls": null
+        }
+      }
+    ],
+    "created": 1786701794,
+    "model": "zai-glm-4.7",
+    "object": "chat.completion",
+    "service_tier": null,
+    "system_fingerprint": "fp_a33c042689e969567008",
+    "usage": {
+      "completion_tokens": 68,
+      "prompt_tokens": 1249,
+      "total_tokens": 1317,
+      "completion_tokens_details": {
+        "accepted_prediction_tokens": 0,
+        "audio_tokens": null,
+        "reasoning_tokens": 0,
+        "rejected_prediction_tokens": 0
+      },
+      "prompt_tokens_details": {
+        "audio_tokens": null,
+        "cached_tokens": 1152
+      }
+    },
+    "time_info": {
+      "created": 1786701794.6670845,
+      "queue_time": 0.002724205,
+      "prompt_time": 0.013362428,
+      "completion_time": 0.197279363,
+      "total_time": 0.21494555473327637
+    }
+  }
+}
