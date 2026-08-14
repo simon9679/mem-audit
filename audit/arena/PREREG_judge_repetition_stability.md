@@ -1,3 +1,5 @@
+> **SUPERSEDED by PREREG_arena_order_effect_balanced.md** — the AB-only design compared a fresh run against a historical one and was replaced by a within-run balanced design at the same cost. Not executed. No API call was ever made under this registration.
+
 # PREREG — Judge repetition stability (same-order, zai-glm-4.7)
 
 **Status:** Preregistered. Committed before any provider call for this measurement.
