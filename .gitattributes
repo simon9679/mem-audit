@@ -32,3 +32,8 @@ audit/canary/FINDING_canary_ci_mismatch.md text eol=lf
 # A default Windows checkout would rewrite these to CRLF and break the manifest.
 audit/arena/** text eol=lf
 audit/arena/run_balanced/MANIFEST.sha256 text eol=lf
+
+# Arena bundle index and the summary-vs-raw finding — LF-pinned for stable review.
+# (audit/arena/README.md is already covered by the glob above; pinned explicitly for parity.)
+audit/arena/README.md text eol=lf
+audit/FINDINGS_summary_vs_raw.md text eol=lf
