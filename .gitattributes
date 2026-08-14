@@ -26,3 +26,9 @@ audit/canary/recompute_canary_ci.py text eol=lf
 audit/canary/redact_canary.py text eol=lf
 audit/canary/CANARY_FINAL.json text eol=lf
 audit/canary/FINDING_canary_ci_mismatch.md text eol=lf
+
+# Arena judge order-effect bundle — prereg, results, runner, manifest, and all
+# 60 raw judgments are hash-pinned by audit/arena/run_balanced/MANIFEST.sha256.
+# A default Windows checkout would rewrite these to CRLF and break the manifest.
+audit/arena/** text eol=lf
+audit/arena/run_balanced/MANIFEST.sha256 text eol=lf

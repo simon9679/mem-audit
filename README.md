@@ -351,6 +351,14 @@ result tables, and the harness code — lives in
   bootstrap CI [2, 13] does not reproduce (recomputed: [4, 12]); the published
   interval is wider, so no conclusion is inflated
   ([`audit/canary/FINDING_canary_ci_mismatch.md`](audit/canary/FINDING_canary_ci_mismatch.md)).
+- **Judge order effect (LLM-as-judge).** A balanced within-run design — 60 judge
+  calls, three passes over 20 prompts — isolates the AB↔BA answer-position order
+  from the judge's own repeat noise. Cross-order outcome instability
+  **M1 = 7/20** while same-order instability **M2 = 0/20**: the order effect is
+  real, but the directional tie-drift does not reach significance, so the verdict
+  is **INCONCLUSIVE** by the pre-registered resolution rule. Not an audit of
+  Arena-Hard, which aggregates both orders by Bradley–Terry
+  ([`audit/arena/`](audit/arena/)).
 
 This is exactly the kind of drift `mem-audit` is meant to help you *see* after
 the fact — it doesn't prevent it, and per "What it does not do" above, it never
