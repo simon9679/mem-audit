@@ -472,6 +472,30 @@ retrieved memory context.
 - Raw redacted verdicts, the recomputation script, and the allowlist redactor:
   [`audit/canary/`](audit/canary/).
 
+## 9. Judge order effect (Arena-Hard)
+
+A balanced within-run measurement of the AB↔BA answer-position order effect on a
+pairwise LLM judge (`zai-glm-4.7`, `temperature=0`), separate from the Mem0 work
+above. 60 judge calls in three passes over 20 prompts: each prompt gets one fresh
+cross-order pair (order swapped between passes) and one fresh same-order pair
+(order repeated), so answer position is isolated from the judge's own repeat noise.
+
+- Cross-order outcome instability **M1 = 7/20**; same-order instability
+  **M2 = 0/20** — Pass 1 and Pass 3 were identical at the verdict level. With
+  repeat noise at zero, the whole 7/20 is attributable to order, not randomness.
+- The directional criterion **M3** (exact McNemar on the cross-order tie/decision
+  discordance) gives **p = 0.375** (tie-under-BA 4 : tie-under-AB 1) — not
+  significant. Verdict **INCONCLUSIVE** by the pre-registered resolution rule: the
+  effect is neither confirmed nor withdrawn.
+- Full record, prereg, runner, raw judgments, and manifest:
+  [`audit/arena/`](audit/arena/).
+
+**This is not an audit of Arena-Hard.** Arena-Hard judges each query in *both*
+orders and aggregates by Bradley–Terry, which cancels answer position by
+construction; the numbers here measure instability *before* that aggregation, and
+the decision↔tie transitions that drive M1 do not enter the standard
+position-inconsistency metric.
+
 ---
 
 *Tone note: §3.1–§3.3 are reproducible defects and are named as such. §3.4 is a
