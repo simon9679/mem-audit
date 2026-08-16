@@ -56,11 +56,11 @@ dialogues was not tested.
 ## Interpretation
 
 The architectural refactor that removed §3.1–§3.3 did **not** make extraction
-reproducible. Reproducibility is therefore **not in the architecture** — it is in
-the LLM extraction step, which is stochastic at temperature 0 (the same model call,
-run twice, yields different facts once the context is non-trivial). This is the
-strongest result of the audit because it is not tied to a specific bug in a specific
-version: it is a property of building memory on top of LLM extraction.
+reproducible: the divergence is reproduced on 2.0.17, after that refactor (the same
+model call, run twice, yields different facts once the context is non-trivial). These
+runs do not isolate the source of the divergence — model, prompt/pipeline, and other
+components are not separated here — so where it originates is not established from this
+pair; only that it persists on the current release.
 
 ## Predictions vs facts (PREREG not edited)
 

@@ -173,8 +173,9 @@ result** (`RESULTS_mem0_HI_2x.md`). Two clean single-call runs (H2, I2; 33/33; e
 session exactly one LLM call; `get_all` truncation-guarded) agree byte-for-byte on
 only **~9 %** of facts, ~22 % at cosine 0.72 (Jaccard 0.22), with volume stable
 (65 vs 68 facts) and **0 of 20** questions returning an identical top-5. The
-refactor that removed §3.1–§3.3 did **not** make extraction reproducible —
-reproducibility is not in the architecture, it is in the stochastic LLM extraction.
+refactor that removed §3.1–§3.3 did **not** make extraction reproducible: the
+divergence is reproduced on 2.0.17, after that refactor. These runs do not isolate its
+source — model, prompt/pipeline, and other components are not separated here.
 
 The **prefix curve** is the substantive part: symdiff (0.72) over sessions 0–k is
 **0.0 % (0–4) → 26 → 63 → 74 → 78 % (0–32)**. In this run pair the first sessions are
