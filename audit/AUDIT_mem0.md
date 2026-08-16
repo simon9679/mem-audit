@@ -4,8 +4,9 @@ A reproducibility and consistency audit of [Mem0](https://github.com/mem0ai/mem0
 run as an external observer through Mem0's own SDK. It reports four findings: two
 engineering defects that caused silent memory loss, a provider-dependent loop between them,
 and one measured property — run-to-run divergence — that is not a defect. Every number cites the file
-it comes from; a hash manifest (§7) lets a third party check the raw data was not
-changed after publication.
+it comes from; a hash manifest (§7) records hashes and provenance, but an independent
+hash check is possible only for artifacts actually published in this repository — for the
+rest the manifest is a record taken at run time, not independently verifiable evidence.
 
 > **Version scope (read first).** The original §3.1–§3.4 measurements were taken on
 > **mem0ai 1.0.11**. Residual run-to-run divergence was subsequently re-measured on
