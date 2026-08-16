@@ -60,9 +60,10 @@ formally satisfies `ties ≤ 1` — the mechanism by which a FAIL was recorded a
 What cannot be shown is the run itself. The bundle `arena_hard_glm_calibration_04` was deleted during a
 cleanup of five early invalid bundles, together with `arena_hard_infrastructure_probe_01`,
 `arena_hard_gptoss_01`, `arena_hard_gptoss_probe_02` and `arena_hard_scoring_killtest_03`.
-The raw verdicts and the faulty code no longer exist anywhere; what survives is the
-session transcript in which the recount was performed. **This case is therefore recorded
-as a documented loss, not offered as a checkable result.** It is included because the
+The run and its raw verdicts no longer exist anywhere; what survives is the session
+transcript in which the recount was performed, and the faulty classifier itself, outside this
+repository (the `scoring04.py` line quoted above). **The run is therefore recorded as a documented
+loss, while the defect it ran is checkable — not offered as a reproducible result.** It is included because the
 loss itself is evidence: the best defect found in this project is the one that cannot be
 shown to anyone.
 

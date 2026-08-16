@@ -1,9 +1,12 @@
-# Mem0 silently drops writes — three independent paths (issue-grade)
+# Mem0 silently drops writes — two mechanisms and a provider-dependent loop (issue-grade)
 
 The headline result of this audit is not a symmetric-difference number. It is that
-**Mem0 has three independent ways to silently fail to store a memory** — the
-caller is told the write succeeded, and it did not. All three trace to one
-structural cause and one of them was found *by accident*.
+**Mem0 has two mechanisms that silently fail to store a memory, plus a provider-dependent
+loop between them** — the caller is told the write succeeded, and it did not. Both mechanisms
+occur in the same update-decision stage, which returns the full accumulated memory list on
+every turn, and both are silently collapsed into an apparently successful write. Their
+immediate triggers differ: output truncation against the cap, and a swallowed transport
+error. One of the two was found *by accident*.
 
 ## How it was found (worth stating)
 
@@ -21,7 +24,7 @@ someone else's code.
 Mem0's update-decision step returns the **entire accumulated memory list every
 turn** (each fact + an ADD/UPDATE/DELETE/NONE event). Output therefore grows
 linearly with the store (~55 chars ≈ ~14 tokens per stored fact, measured). This
-one O(store) call is where all three failures land.
+one O(store) call is where both failures land.
 
 ## Path 1 — truncation against the output cap
 
@@ -46,11 +49,10 @@ This is the one found via the reproducibility invariant: a session whose update
 call was swallowed logs as "ok" with only **one** LLM call recorded instead of
 two — the tell that its reconciliation never ran.
 
-## Path 3 — the fix for Path 1 provokes Path 2 (closed loop)
+## Path 3 — provider-dependent loop: the fix for Path 1 provokes Path 2
 
-Raising `max_tokens` (2000 → 16000) removes truncation. But Cerebras (and
-OpenAI-compatible endpoints generally) **reserve quota by `max_completion_tokens`,
-not by actual output.** A full 33-session ingest at 16000 reserves 33·2·16000 ≈
+Raising `max_tokens` (2000 → 16000) removes truncation. But Cerebras **reserves quota by
+`max_completion_tokens`, not by actual output.** A full 33-session ingest at 16000 reserves 33·2·16000 ≈
 **1.05 M tokens** — the entire daily free-tier budget — though it *generates* only
 ~140 k. Exhausting the day's budget then makes every subsequent call 429, i.e.
 **Path 2.** So the natural fix for silent-loss-by-truncation directly causes
@@ -65,8 +67,8 @@ silent-loss-by-429. Each link is measured, not inferred.
 - Path 2 is provider- and model-independent: it is a swallowed transport error,
   not a generation-quality issue. Any deployment that ever hits a 429 loses
   writes silently.
-- The three form a loop with no free corner: small cap → truncation; large cap →
-  quota-reservation → 429 → swallowed loss.
+- The two mechanisms and the provider's reservation policy form a loop with no free corner:
+  small cap → truncation; large cap → quota-reservation → 429 → swallowed loss.
 
 **Fix direction for Mem0 (for the issue):** the update call must not be O(store)
 (don't rewrite the whole memory list per turn), `add()` must surface a failed or

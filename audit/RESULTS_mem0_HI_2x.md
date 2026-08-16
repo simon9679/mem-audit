@@ -3,7 +3,7 @@
 PREREG: `PREREG_HI_2x.md`, registered before any number. This measures the one
 question the 2.x refactor does not touch — **is Mem0's fact extraction reproducible
 at `temperature=0`** — on the **current** release, after the refactor that removed
-the three defects of §3.1–§3.3.
+the §3.1–§3.3 defects (two write-loss mechanisms and the provider-dependent loop between them).
 
 ## Configuration
 mem0ai **2.0.17**, Chroma local, HuggingFace `all-MiniLM-L6-v2` embedder,
@@ -28,11 +28,14 @@ H2 = 65 facts, I2 = 68 facts (**volume divergence 4.4 %**). Positive control
 
 **Two runs of the identical configuration at temperature 0 agree byte-for-byte on
 ~9 % of facts, and on ~22 % (Jaccard, cosine 0.72).** Retrieval over the 20 frozen
-questions: pooled symdiff 68–91 %, per-question top-5 Jaccard **0.064**, **0/20**
-questions returned an identical top-5. Amplification: diverging retrieved facts
-mean cosine to the question **0.524** vs matched **0.530** (Δ +0.006) — diverging
-facts are as on-topic as matched ones, so the difference is in valuable content,
-not tail noise.
+questions: per-question top-5 Jaccard **0.064**, **0/20** questions returned an identical top-5.
+
+**Relevance of diverging facts at retrieval.** Storage symdiff was **77.98 %** and pooled
+retrieval symdiff **79.17 %** at cosine 0.72. The magnitudes are descriptively similar; no
+statistical test of amplification was pre-registered or performed. Diverging retrieved facts
+stay as relevant to the question as matched ones: mean cosine **0.524** vs matched **0.530**
+(Δ +0.006). The data is silent on whether divergence is amplified. At cosine 0.72 and 0.82,
+pooled retrieval symdiff was the same: **79.17 %**.
 
 ## The prefix curve (the main result)
 
@@ -42,21 +45,19 @@ Symdiff (cosine 0.72) restricted to sessions 0–k:
 |---|---|---|---|---|
 | **0.0** | 26.3 | 63.2 | 73.8 | 78.0 |
 
-**On a short conversation Mem0's extraction is deterministic** — the first five
-sessions are byte-for-byte identical between the two runs (all 11 shared exact
-facts come from there). **Divergence appears with accumulated context and grows
-with it**, reaching 78 % by session 32 with no sign of a plateau. This is a direct
-empirical statement about *where* a memory layer starts to be unreliable: not on
-short exchanges, but on the multi-session horizon, and worse the longer the history.
+In this one run pair, the first five sessions are byte-for-byte identical between the
+two runs (all 11 shared exact facts come from there), and on the measured prefixes
+symdiff rose monotonically to 78 % by session 32 without reaching a plateau. This is
+one pair of runs on one dialogue; whether the curve's shape transfers to other
+dialogues was not tested.
 
 ## Interpretation
 
 The architectural refactor that removed §3.1–§3.3 did **not** make extraction
-reproducible. Reproducibility is therefore **not in the architecture** — it is in
-the LLM extraction step, which is stochastic at temperature 0 (the same model call,
-run twice, yields different facts once the context is non-trivial). This is the
-strongest result of the audit because it is not tied to a specific bug in a specific
-version: it is a property of building memory on top of LLM extraction.
+reproducible: the divergence is reproduced on 2.0.17, after that refactor. These
+runs do not isolate the source of the divergence — model, prompt/pipeline, and other
+components are not separated here — so where it originates is not established from this
+pair; only that it persists on the current release.
 
 ## Predictions vs facts (PREREG not edited)
 
@@ -70,6 +71,11 @@ version: it is a property of building memory on top of LLM extraction.
 
 Both the pre-registered guess (≈35 %, ~1.0.11 order) and the numeric prediction
 (0.72 ≈ 25–45 %) were wrong — divergence is much larger. Recorded as-is.
+
+The pre-registration also carried a causal hypothesis — that the non-determinism is a
+property of the model, not of the pipeline the refactor changed. These runs do not
+establish that localization: the source of the divergence, between the model, the
+prompt/pipeline, and other components, is not isolated here.
 
 ## Limitations
 

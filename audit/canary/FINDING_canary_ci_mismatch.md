@@ -67,7 +67,7 @@ bootstrap percentile", so we cannot confirm which implementation was used.
 
 `CANARY_FINAL.json` is published as-is with the original [2, 13]. The
 recomputed [4, 12] is documented here as a reproducibility finding. The
-recomputation script (`recompute_canary_ci.py`) is deterministic and runs on
+recomputation script (`recompute_canary_ci.py`) runs deterministically on
 the redacted verdict files without access to any p8 text.
 
 ## Provenance of CANARY_FINAL.json
