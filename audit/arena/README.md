@@ -94,8 +94,8 @@ pattern.
 Zero observed is not zero probability. At n = 20, an observed 0/20 is compatible with a
 true same-order disagreement rate of up to about 16% (95% Wilson upper bound 0.161; the
 rule of three gives 3/20 = 0.15). So the correct statement is that same-order noise was
-not detected at this sample size, not that it is absent — and consequently not that the
-whole 7/20 is attributable to order.
+not detected at this sample size, not that it is absent — and consequently not that order
+alone accounts for all seven cross-order flips.
 
 **M3 did not confirm the narrower hypothesis.** The stage-3 data showed tie discordance
 5:0 in favour of ties under BA; the fresh run gave 4:1, and one prompt breaking the

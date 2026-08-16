@@ -3,7 +3,7 @@
 PREREG: `PREREG_HI_2x.md`, registered before any number. This measures the one
 question the 2.x refactor does not touch — **is Mem0's fact extraction reproducible
 at `temperature=0`** — on the **current** release, after the refactor that removed
-the three defects of §3.1–§3.3.
+the §3.1–§3.3 defects (two write-loss mechanisms and the provider-dependent loop between them).
 
 ## Configuration
 mem0ai **2.0.17**, Chroma local, HuggingFace `all-MiniLM-L6-v2` embedder,
@@ -28,11 +28,16 @@ H2 = 65 facts, I2 = 68 facts (**volume divergence 4.4 %**). Positive control
 
 **Two runs of the identical configuration at temperature 0 agree byte-for-byte on
 ~9 % of facts, and on ~22 % (Jaccard, cosine 0.72).** Retrieval over the 20 frozen
-questions: pooled symdiff 68–91 %, per-question top-5 Jaccard **0.064**, **0/20**
-questions returned an identical top-5. Amplification: diverging retrieved facts
-mean cosine to the question **0.524** vs matched **0.530** (Δ +0.006) — diverging
-facts are as on-topic as matched ones, so the difference is in valuable content,
-not tail noise.
+questions: per-question top-5 Jaccard **0.064**, **0/20** questions returned an identical top-5.
+
+**Relevance of diverging facts at retrieval.** The storage divergence reaches retrieval: storage
+symdiff **77.98 %** vs pooled retrieval symdiff **79.17 %** at cosine 0.72 — comparable magnitudes,
+and on a pool of 33 and 25 facts the two cannot be distinguished (the 95 % Wilson interval for the
+retrieval 38/48 is 65.7–88.3 %, and the storage point sits inside it). Diverging retrieved facts
+stay as relevant to the question as matched ones: mean cosine **0.524** vs matched **0.530**
+(Δ +0.006). The data is silent on whether divergence is amplified. Note also that pooled retrieval
+symdiff is **identical at cosine 0.72 and 0.82** (79.17 % at both) — on this small pool the metric
+stops separating thresholds, a limit of the measurement.
 
 ## The prefix curve (the main result)
 

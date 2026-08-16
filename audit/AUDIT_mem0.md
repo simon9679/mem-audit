@@ -1,23 +1,23 @@
 # Mem0 consistency audit — findings and measurements
 
 A reproducibility and consistency audit of [Mem0](https://github.com/mem0ai/mem0),
-run as an external observer through Mem0's own SDK. It reports four findings: three
-engineering defects that caused silent memory loss, and one measured property of LLM
-extraction (run-to-run divergence) that is not a defect. Every number cites the file
+run as an external observer through Mem0's own SDK. It reports four findings: two
+engineering defects that caused silent memory loss, a provider-dependent loop between them,
+and one measured property of LLM extraction (run-to-run divergence) that is not a defect. Every number cites the file
 it comes from; a hash manifest (§7) lets a third party check the raw data was not
 changed after publication.
 
 > **Version scope (read first).** All measurements were taken on **mem0ai 1.0.11**.
-> The current release is **2.0.17**, which **refactored away all three defects**
+> The current release is **2.0.17**, which **refactored away both defects and the loop**
 > (§3.0): §3.1 and §3.3 are gone because the O(store) update-decision call was
 > replaced by a single-call additive extraction, and §3.2 is fixed by re-raising
 > instead of the old silent `return []`. So this is a record of how the system
 > behaved **before** that refactor — with numbers no one else has — not a report of
-> a current bug. Independently, the three defects match the maintainers' own fix
+> a current bug. Independently, these write-loss findings match the maintainers' own fix
 > (their commit comment names the same 429-vs-no-facts confusion measured in §3.2).
 > Finding **§3.4** (extraction non-determinism at temperature 0) is a property of the
-> LLM, not of Mem0's code, so it is version-independent; §3.0 notes its status on
-> 2.0.17.
+> LLM, not of Mem0's code; it was reproduced on the current release **2.0.17** (§3.0 notes
+> its status there).
 
 This document is self-contained. The per-stage records it summarizes
 (`RESULTS_mem0_symdiff.md`, `RESULTS_mem0_maxtokens.md`, `RESULTS_mem0_retrieval.md`,
@@ -92,7 +92,7 @@ The findings below were measured on mem0ai 1.0.11. Verified against the current
   (A JSON-*parse* failure on a genuinely malformed response still sets an empty list
   quietly, but that is the model-output-quality case tracked in mem0ai#4540, not the
   O(store) truncation of §3.1.)
-- **§3.4 is version-independent and now measured on 2.0.17** (`RESULTS_mem0_HI_2x.md`).
+- **§3.4 was reproduced on the current release 2.0.17** (`RESULTS_mem0_HI_2x.md`).
   It concerns the LLM's run-to-run extraction, not Mem0's control flow. Two clean
   single-call runs at `temperature=0` on 2.0.17 agree byte-for-byte on ~9 % of facts
   (Jaccard 0.22 at cosine 0.72), with 0/20 questions returning an identical top-5.
@@ -150,7 +150,7 @@ that write with no error to the caller. (`FINDINGS_silent_loss.md`.)
 
 ### 3.3 Quota reservation makes the §3.1 fix cause §3.2 (closed loop; moot in 2.x — §3.0)
 
-Cerebras (and OpenAI-compatible endpoints generally) **reserve quota by
+Cerebras **reserves quota by
 `max_completion_tokens`, not by actual output.** A 33-session ingest at
 `max_tokens=16000` reserves 33·2·16000 ≈ **1.05 M tokens** — the entire daily
 free-tier budget — while generating only ~140 k. Raising `max_tokens` to remove the
@@ -487,8 +487,10 @@ cross-order pair (order swapped between passes) and one fresh same-order pair
 (order repeated), so answer position is isolated from the judge's own repeat noise.
 
 - Cross-order outcome instability **M1 = 7/20**; same-order instability
-  **M2 = 0/20** — Pass 1 and Pass 3 were identical at the verdict level. With
-  repeat noise at zero, the whole 7/20 is attributable to order, not randomness.
+  **M2 = 0/20** — Pass 1 and Pass 3 were identical at the verdict level. Zero observed is not
+  zero probability: at n = 20, M2 = 0/20 is compatible with a true same-order rate up to about
+  16% (95% Wilson upper bound 0.161). So same-order noise does not *explain* the 7/20 cross-order
+  pattern at this n — not that order alone accounts for all seven flips.
 - The directional criterion **M3** (exact McNemar on the cross-order tie/decision
   discordance) gives **p = 0.375** (tie-under-BA 4 : tie-under-AB 1) — not
   significant. Verdict **INCONCLUSIVE** by the pre-registered resolution rule: the
@@ -506,6 +508,7 @@ position-inconsistency metric.
 
 ---
 
-*Tone note: §3.1–§3.3 are reproducible defects and are named as such. §3.4 is a
-measured property of LLM extraction at `temperature=0`, not a defect. Nothing here is
+*Tone note: §3.1 and §3.2 are reproducible defects and are named as such; §3.3 is the
+provider-dependent loop between them, not a third independent defect. §3.4 is a measured
+property of LLM extraction at `temperature=0`, not a defect. Nothing here is
 an accusation; it is a set of measurements a third party can repeat.*
