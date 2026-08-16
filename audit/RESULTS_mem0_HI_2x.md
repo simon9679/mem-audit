@@ -47,12 +47,11 @@ Symdiff (cosine 0.72) restricted to sessions 0–k:
 |---|---|---|---|---|
 | **0.0** | 26.3 | 63.2 | 73.8 | 78.0 |
 
-**On a short conversation Mem0's extraction is deterministic** — the first five
-sessions are byte-for-byte identical between the two runs (all 11 shared exact
-facts come from there). **Divergence appears with accumulated context and grows
-with it**, reaching 78 % by session 32 with no sign of a plateau. This is a direct
-empirical statement about *where* a memory layer starts to be unreliable: not on
-short exchanges, but on the multi-session horizon, and worse the longer the history.
+In this one run pair, the first five sessions are byte-for-byte identical between the
+two runs (all 11 shared exact facts come from there), and on the measured prefixes
+symdiff rose monotonically to 78 % by session 32 without reaching a plateau. This is
+one pair of runs on one dialogue; whether the curve's shape transfers to other
+dialogues was not tested.
 
 ## Interpretation
 
