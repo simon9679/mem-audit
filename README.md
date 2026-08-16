@@ -329,18 +329,19 @@ the same conversation? The full write-up — pre-registered predictions, raw
 result tables, and the harness code — lives in
 [`audit/AUDIT_mem0.md`](audit/AUDIT_mem0.md).
 
-- **Three silent-write-loss defects**, measured on mem0ai 1.0.11: output
-  truncation on the growing update-decision payload, a swallowed `429` that
-  makes `add()` report success on a write that never happened, and a
-  quota-reservation loop where fixing the first defect provokes the second.
-  All three are **confirmed fixed upstream in mem0ai 2.x**
+- **Two silent-write-loss mechanisms plus a provider-dependent loop between them**,
+  measured on mem0ai 1.0.11: output truncation on the growing update-decision payload,
+  and a swallowed `429` that makes `add()` report success on a write that never
+  happened — plus a quota-reservation loop where fixing the first provokes the second.
+  All are **confirmed fixed upstream in mem0ai 2.x**
   ([`audit/FINDINGS_silent_loss.md`](audit/FINDINGS_silent_loss.md)).
 - **The headline finding survives the fix.** On the current release
   (mem0ai 2.0.17), two clean runs of the same 33-session dialogue at
   `temperature=0` still agree on only **~9% of facts byte-for-byte** (~22% by
-  meaning). Divergence is ~0% on short conversations and climbs to 78% by
-  session 32 with no plateau — extraction reproducibility isn't an engineering
-  bug the refactor removed, it's a property of LLM-based extraction itself
+  meaning). In this one run pair, symdiff is ~0% on the first sessions and rises to
+  78% by session 32 with no plateau; whether that shape transfers to other dialogues
+  was not tested. The refactor did not remove the divergence, and these runs do not
+  isolate its source between the model, the prompt/pipeline, and other components
   ([`audit/RESULTS_mem0_HI_2x.md`](audit/RESULTS_mem0_HI_2x.md)).
 
   A separate J4/K4 configuration check with `max_tokens=4000` and
@@ -352,13 +353,14 @@ result tables, and the harness code — lives in
   interval is wider, so no conclusion is inflated
   ([`audit/canary/FINDING_canary_ci_mismatch.md`](audit/canary/FINDING_canary_ci_mismatch.md)).
 - **Judge order effect (LLM-as-judge).** A balanced within-run design — 60 judge
-  calls, three passes over 20 prompts — isolates the AB↔BA answer-position order
-  from the judge's own repeat noise. Cross-order outcome instability
-  **M1 = 7/20** while same-order instability **M2 = 0/20**: the order effect is
-  real, but the directional tie-drift does not reach significance, so the verdict
-  is **INCONCLUSIVE** by the pre-registered resolution rule. Not an audit of
-  Arena-Hard, which aggregates both orders by Bradley–Terry
-  ([`audit/arena/`](audit/arena/)).
+  calls, three passes over 20 prompts — separates the AB↔BA answer-position order
+  from the judge's own repeat noise. Cross-order outcome instability **M1 = 7/20**
+  against same-order **M2 = 0/20**: same-order noise was not detected at this n
+  (0/20 is still compatible with a true rate up to ~16%, 95% Wilson upper bound
+  0.161), so it does not explain the 7/20 — but the directional tie-drift does not
+  reach significance either, so the verdict is **INCONCLUSIVE** by the pre-registered
+  resolution rule. Not an audit of Arena-Hard, which aggregates both orders by
+  Bradley–Terry ([`audit/arena/`](audit/arena/)).
 
 This is exactly the kind of drift `mem-audit` is meant to help you *see* after
 the fact — it doesn't prevent it, and per "What it does not do" above, it never

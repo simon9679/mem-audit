@@ -56,8 +56,7 @@ dialogues was not tested.
 ## Interpretation
 
 The architectural refactor that removed §3.1–§3.3 did **not** make extraction
-reproducible: the divergence is reproduced on 2.0.17, after that refactor (the same
-model call, run twice, yields different facts once the context is non-trivial). These
+reproducible: the divergence is reproduced on 2.0.17, after that refactor. These
 runs do not isolate the source of the divergence — model, prompt/pipeline, and other
 components are not separated here — so where it originates is not established from this
 pair; only that it persists on the current release.
