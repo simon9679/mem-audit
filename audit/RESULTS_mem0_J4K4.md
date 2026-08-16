@@ -105,9 +105,7 @@ is not applied retroactively to these results.
 
 ## Manifest (number → file → SHA-256)
 
-Raw data outside the repository (produced locally; not yet published as a release
-package — see the note on `mem-audit-release` in `AUDIT_mem0.md` §7 regarding what "in
-repo" verification currently covers).
+Raw data are outside the repository and have not been published.
 
 Both files are published in `audit/results/`. Two hashes are recorded per file: the
 **as-committed** value, which is what `MANIFEST.sha256` checks and what a third party
@@ -138,5 +136,5 @@ are recorded in `codex/J4K4_FINAL/README_J4K4.txt` and `codex/J4K4_FINAL/BUNDLE_
 pending a decision on whether that bundle is published as a repository release (not yet
 done as of this writing).
 
-Reproduce the dump-level comparison (once raw dumps are published):
-`python codex/analyze_pair.py --j dump_J4_p8.json --k dump_K4_p8.json --out analysis_J4K4.json`
+Reproduce the dump-level comparison (once raw dumps are published): 
+`python audit/compare_dumps.py dump_J4_p8.json dump_K4_p8.json`
