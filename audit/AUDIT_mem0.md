@@ -3,7 +3,7 @@
 A reproducibility and consistency audit of [Mem0](https://github.com/mem0ai/mem0),
 run as an external observer through Mem0's own SDK. It reports four findings: two
 engineering defects that caused silent memory loss, a provider-dependent loop between them,
-and one measured property of LLM extraction (run-to-run divergence) that is not a defect. Every number cites the file
+and one measured property — run-to-run divergence — that is not a defect. Every number cites the file
 it comes from; a hash manifest (§7) lets a third party check the raw data was not
 changed after publication.
 
@@ -15,9 +15,9 @@ changed after publication.
 > behaved **before** that refactor — with numbers no one else has — not a report of
 > a current bug. Independently, these write-loss findings match the maintainers' own fix
 > (their commit comment names the same 429-vs-no-facts confusion measured in §3.2).
-> Finding **§3.4** (extraction non-determinism at temperature 0) is a property of the
-> LLM, not of Mem0's code; it was reproduced on the current release **2.0.17** (§3.0 notes
-> its status there).
+> Finding **§3.4** (extraction non-determinism at temperature 0) was reproduced on the
+> current release **2.0.17**; these runs do not isolate its source between the model and
+> the prompt/pipeline (§3.0 notes its status there).
 
 This document is self-contained. The per-stage records it summarizes
 (`RESULTS_mem0_symdiff.md`, `RESULTS_mem0_maxtokens.md`, `RESULTS_mem0_retrieval.md`,
@@ -164,9 +164,9 @@ With truncation removed and no swallowed 429 (runs H and I, `max_tokens=6000`, b
 33/33 sessions complete, every session verified to have made both LLM calls), two
 runs of the identical configuration at `temperature=0` still produce **different
 memory**: similar volume (189 vs 179 facts, 5.3 % apart) but **~⅓ different content**
-(§4). This is not attributable to any of the defects above; it is a property of
-LLM extraction at these settings. A 35 % run-to-run difference at `temperature=0` is
-reported as an observation, not a bug.
+(§4). This is not attributable to any of the defects above; the divergence was observed
+in both runs, and these runs do not isolate its source. A 35 % run-to-run difference at
+`temperature=0` is reported as an observation, not a bug.
 
 **Confirmed on the current release (2.0.17), and this is the audit's strongest
 result** (`RESULTS_mem0_HI_2x.md`). Two clean single-call runs (H2, I2; 33/33; every
@@ -511,5 +511,9 @@ position-inconsistency metric.
 
 *Tone note: §3.1 and §3.2 are reproducible defects and are named as such; §3.3 is the
 provider-dependent loop between them, not a third independent defect. §3.4 is a measured
-property of LLM extraction at `temperature=0`, not a defect. Nothing here is
-an accusation; it is a set of measurements a third party can repeat.*
+property — run-to-run divergence — at `temperature=0`, not a defect. Nothing here is
+an accusation. The published numbers recompute from the artifacts in this repository; the
+runs themselves cannot be repeated without raw data that is not published here — the H2/I2
+dumps, part of the J4/K4 artifacts, and the p8 dialogue (withheld under ES-MemEval terms).
+The arena stage-4 run is the exception: its 60 raw judgments and manifest are published, so
+it recomputes in full.*

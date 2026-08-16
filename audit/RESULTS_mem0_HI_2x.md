@@ -74,6 +74,11 @@ pair; only that it persists on the current release.
 Both the pre-registered guess (≈35 %, ~1.0.11 order) and the numeric prediction
 (0.72 ≈ 25–45 %) were wrong — divergence is much larger. Recorded as-is.
 
+The pre-registration also carried a causal hypothesis — that the non-determinism is a
+property of the model, not of the pipeline the refactor changed. These runs do not
+establish that localization: the source of the divergence, between the model, the
+prompt/pipeline, and other components, is not isolated here.
+
 ## Limitations
 
 - **Small base.** 2.x extracts far fewer facts (65/68) than 1.0.11 did (189/179).
