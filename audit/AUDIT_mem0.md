@@ -99,8 +99,9 @@ The findings below were measured on mem0ai 1.0.11. Verified against the current
   It concerns the LLM's run-to-run extraction, not Mem0's control flow. Two clean
   single-call runs at `temperature=0` on 2.0.17 agree byte-for-byte on ~9 % of facts
   (Jaccard 0.22 at cosine 0.72), with 0/20 questions returning an identical top-5.
-  **The refactor did not make extraction reproducible** — it is not in the
-  architecture. (Direction vs 1.0.11 is not compared; see the RESULTS limitations.)
+  **The refactor did not make extraction reproducible**; the divergence persists on
+  2.0.17, and these runs do not isolate its source between the model, the prompt/pipeline,
+  and other components. (Direction vs 1.0.11 is not compared; see the RESULTS limitations.)
 
 So §3.1–§3.3 are a record of pre-refactor behavior (with numbers), not current bugs.
 

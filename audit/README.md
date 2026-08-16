@@ -27,8 +27,9 @@ repo alone. Files are grouped below by role.
 - [`RESULTS_mem0_HI_2x.md`](RESULTS_mem0_HI_2x.md) — H2↔I2 on 2.0.17: exact agreement about **9%**;
   at cosine 0.72 agreement about **22%** (symdiff 77.98%), and on that same metric the prefix curve
   runs 0 → 26.3 → 63.2 → 73.8 → 78.0% across sessions.
-- [`RESULTS_mem0_J4K4.md`](RESULTS_mem0_J4K4.md) — J4↔K4, a second config: byte-for-byte agreement
-  **~1.4%** (6 of 433 union facts), volume divergence 7.46% — the effect isn't setting-specific.
+- [`RESULTS_mem0_J4K4.md`](RESULTS_mem0_J4K4.md) — J4↔K4, a configuration replication (`max_tokens=4000`,
+  `reasoning_effort=low`): byte-for-byte agreement **~1.4%** (6 of 433 union facts), volume divergence
+  7.46% — a second measurement, not a generalization beyond the tested dialogue, model, and provider.
 - [`RESULTS_mem0_maxtokens.md`](RESULTS_mem0_maxtokens.md) — truncation fix (run F): `max_tokens`
   2000→16000 takes sessions-clean from 11/33 to **33/33**, 0 truncations. The default-config loss is a `max_tokens` artefact.
 - [`RESULTS_mem0_symdiff.md`](RESULTS_mem0_symdiff.md) — Mem0 1.0.11, session 2: full-dump
