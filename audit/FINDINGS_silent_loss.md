@@ -3,7 +3,10 @@
 The headline result of this audit is not a symmetric-difference number. It is that
 **Mem0 has two mechanisms that silently fail to store a memory, plus a provider-dependent
 loop between them** — the caller is told the write succeeded, and it did not. Both mechanisms
-trace to one structural cause, and one was found *by accident*.
+occur in the same update-decision stage, which returns the full accumulated memory list on
+every turn, and both are silently collapsed into an apparently successful write. Their
+immediate triggers differ: output truncation against the cap, and a swallowed transport
+error. One of the two was found *by accident*.
 
 ## How it was found (worth stating)
 

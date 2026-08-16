@@ -7,7 +7,9 @@ and one measured property — run-to-run divergence — that is not a defect. Ev
 it comes from; a hash manifest (§7) lets a third party check the raw data was not
 changed after publication.
 
-> **Version scope (read first).** All measurements were taken on **mem0ai 1.0.11**.
+> **Version scope (read first).** The original §3.1–§3.4 measurements were taken on
+> **mem0ai 1.0.11**. Residual run-to-run divergence was subsequently re-measured on
+> 2.0.17, with an additional configuration replication in §3.5.
 > The current release is **2.0.17**, which **refactored away both defects and the loop**
 > (§3.0): §3.1 and §3.3 are gone because the O(store) update-decision call was
 > replaced by a single-call additive extraction, and §3.2 is fixed by re-raising
@@ -512,8 +514,9 @@ position-inconsistency metric.
 *Tone note: §3.1 and §3.2 are reproducible defects and are named as such; §3.3 is the
 provider-dependent loop between them, not a third independent defect. §3.4 is a measured
 property — run-to-run divergence — at `temperature=0`, not a defect. Nothing here is
-an accusation. The published numbers recompute from the artifacts in this repository; the
-runs themselves cannot be repeated without raw data that is not published here — the H2/I2
-dumps, part of the J4/K4 artifacts, and the p8 dialogue (withheld under ES-MemEval terms).
-The arena stage-4 run is the exception: its 60 raw judgments and manifest are published, so
-it recomputes in full.*
+an accusation. Published artifacts allow independent recomputation where primary data are
+included, and internal consistency checks where only derived artifacts are public: the arena
+stage-4 metrics recompute in full from its 60 published raw judgments; for H2/I2 and J4/K4 the
+derived artifacts and their internal consistency can be checked, but the headline measurements
+cannot be independently recomputed from raw; and a full API run requires withheld, unpublished
+inputs.*

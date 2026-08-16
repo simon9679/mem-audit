@@ -30,14 +30,12 @@ H2 = 65 facts, I2 = 68 facts (**volume divergence 4.4 %**). Positive control
 ~9 % of facts, and on ~22 % (Jaccard, cosine 0.72).** Retrieval over the 20 frozen
 questions: per-question top-5 Jaccard **0.064**, **0/20** questions returned an identical top-5.
 
-**Relevance of diverging facts at retrieval.** The storage divergence reaches retrieval: storage
-symdiff **77.98 %** vs pooled retrieval symdiff **79.17 %** at cosine 0.72 — comparable magnitudes,
-and on a pool of 33 and 25 facts the two cannot be distinguished (the 95 % Wilson interval for the
-retrieval 38/48 is 65.7–88.3 %, and the storage point sits inside it). Diverging retrieved facts
+**Relevance of diverging facts at retrieval.** Storage symdiff was **77.98 %** and pooled
+retrieval symdiff **79.17 %** at cosine 0.72. The magnitudes are descriptively similar; no
+statistical test of amplification was pre-registered or performed. Diverging retrieved facts
 stay as relevant to the question as matched ones: mean cosine **0.524** vs matched **0.530**
-(Δ +0.006). The data is silent on whether divergence is amplified. Note also that pooled retrieval
-symdiff is **identical at cosine 0.72 and 0.82** (79.17 % at both) — on this small pool the metric
-stops separating thresholds, a limit of the measurement.
+(Δ +0.006). The data is silent on whether divergence is amplified. At cosine 0.72 and 0.82,
+pooled retrieval symdiff was the same: **79.17 %**.
 
 ## The prefix curve (the main result)
 
