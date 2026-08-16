@@ -177,10 +177,10 @@ refactor that removed §3.1–§3.3 did **not** make extraction reproducible —
 reproducibility is not in the architecture, it is in the stochastic LLM extraction.
 
 The **prefix curve** is the substantive part: symdiff (0.72) over sessions 0–k is
-**0.0 % (0–4) → 26 → 63 → 74 → 78 % (0–32)**. On a short conversation the two runs
-are byte-identical; divergence appears with accumulated context and grows with it,
-with no plateau. Empirically, a memory layer built on LLM extraction is reliable on
-short exchanges and increasingly unreliable across a long, multi-session history.
+**0.0 % (0–4) → 26 → 63 → 74 → 78 % (0–32)**. In this run pair the first sessions are
+byte-identical and symdiff then rose monotonically to 78 % without a plateau. This is
+one pair of runs on one dialogue; whether that shape transfers to other dialogues was
+not tested.
 
 Bounds on the claim (see the RESULTS limitations): 65 facts is a small base, so the
 percentage is volatile; the 1.0.11→2.0.17 *direction* is not compared (several
